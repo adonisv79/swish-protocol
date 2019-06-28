@@ -27,39 +27,51 @@ const auth = new HandshakeServer();
 app.post('/' + auth.path, (req, res) => {
 	console.log('********************************************************************')
 	console.log('***HANDSHAKE:REQUESTED***')
+	console.log('header:')
+	console.dir(req.headers)
+	console.log('body:')
 	console.dir(req.body)
 	//generate a unique session id with the client public key, store this in memory or a memory storage like redis/memcache
 	//the response_pub_key is used to encrypt the service's responses moving forward
-	const session_id = createNewSessionID();
+	const session_id = createNewSessionID();	
+	const result = auth.handleHandshakeRequest(req.headers, req.body, session_id);
 	sessions[session_id].response = {}
-	sessions[session_id].response.pub_key = req.body.client_pub_key;
+	sessions[session_id].response.pub_key = result.session_keys.response_pub_key;
 	
-	const result = auth.handleHandshakeRequest(req.body);
 	//store the request_decryption private key in the session
-	sessions[session_id].request = result.RSA
-	console.log('Sesssion created ID:' + session_id);
-	//return the client request keys and session id
-	let body = result.response_body
-	body.session_id = session_id
+	sessions[session_id].request = result.session_keys.request
 	console.log('***HANDSHAKE:RESPONDING***')
-	console.dir(body)
+	console.log('header:')
+	console.dir(result.headers)
+	console.log('body:')
+	console.dir(result.body)
 	console.log('********************************************************************')
 	console.log('')
-	res.send(body) 
+	res.set(result.headers)
+	res.send(result.body) 
 });
 
 //create a test endpoint to see if data are transfered securely
 app.post('/test', (req, res) => {
 	console.log('***RECEIVED***')
+	console.log('header:')
+	console.dir(req.headers)
+	console.log('body:')
 	console.dir(req.body)
 	//retrieve the private key and passphrase for the session and decryptRequest
-	if (!sessions[req.body.session_id]) {
+	if (!sessions[req.headers.swhs_sess_id]) {
 		res.send(403, 'Invalid Session');
 	}
-	const private_key = sessions[req.body.session_id].request.private_key;
-	const passphrase = sessions[req.body.session_id].request.created_date;
+	const private_key = sessions[req.headers.swhs_sess_id].request.private_key;
+	const passphrase = sessions[req.headers.swhs_sess_id].request.created_date;
 	//decrypt the body with the decryptRequest function
-	const req_body = auth.decryptRequest(private_key, passphrase, req.body)
+	const req_body = auth.decryptRequest(private_key, passphrase, {
+		SWHS_ALGORITHM: req.headers.swhs_algorithm,
+		SWHS_KEY: req.headers.swhs_key,
+		SWHS_IV: req.headers.swhs_iv, 
+		is_json: req.body.is_json,
+		enc_body: req.body.enc_body
+	})
 	
 	console.log('***DECRYPTED BODY***')
 	console.dir(req_body)
@@ -72,13 +84,15 @@ app.post('/test', (req, res) => {
 		response = {secret_response: 'Unknown action, should be hello or move'}
 	}
 	//encrypt the message before sending
-	const response_pub_key = sessions[req.body.session_id].response.pub_key;
-	response = auth.encryptResponse(response_pub_key, response)
+	const response_pub_key = sessions[req.headers.swhs_sess_id].response.pub_key;
+	console.dir(sessions)
+	response = auth.encryptResponse(req.headers.swhs_sess_id, response_pub_key, response)
 	console.log('***RESPONDED***')
 	console.dir(response)
 	console.log('********************************************************************')
 	console.log('')
-	return res.send(response)
+	res.set(response.headers)
+	return res.send(response.body)
 })
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`))

@@ -13,59 +13,97 @@ const hs_client = new HandshakeClient({
 async function test () {	
 	hs_client.resetKeys(); //creates a new handshake key pairing
 	try{
-		let body = hs_client.handshakeBody
+		let swhs = hs_client.generateHandshake();
 		console.log('********************************************************************')
 		console.log('***HANDSHAKE:INITIATING***')
-		console.dir(body)
+		console.dir(swhs)
 		let result = await rp({
+			headers: swhs.headers,
 			method: 'POST',
 			json: true,
 			uri: hs_client.uri_auth,
-			body
+			body: swhs.body,
+			resolveWithFullResponse: true
 		})
 		console.log('***HANDSHAKE:RECEIVED***')
-		console.dir(result)
-		var data = hs_client.handleHandshakeResponse(result)
+		console.dir(result.body)
+		const handshake_pairing = {
+			SWHS_SESS_ID: result.headers.swhs_sess_id,
+			SWHS_ALGORITHM: result.headers.swhs_algorithm,
+			SWHS_KEY: result.headers.swhs_key,
+			SWHS_IV: result.headers.swhs_iv,
+			is_json: result.body.is_json,
+			enc_body: result.body.enc_body
+		}
+		var data = hs_client.handleHandshakeResponse(handshake_pairing)
 		console.log('***HANDSHAKE:PAIRED***')
-		console.dir(data)
+		console.dir(data.request)
 		console.log('********************************************************************')
 		console.log('')
 		
 		//now lets start communicating to the secured endpoints
-		body = hs_client.encryptRequest({
+		swhs = hs_client.encryptRequest({
 			message: "Adonis Villamor",
 			passcode: 'whoami',
 			action: 'hello'
 		})
 		console.log('***SENDING***')
-		console.dir(body)
-		result = await rp({ method: 'POST', json: true, uri: hs_client.uri + 'test', body})
+		console.dir(swhs)
+		result = await rp({ 
+			headers: swhs.headers, 
+			method: 'POST', 
+			json: true, 
+			uri: hs_client.uri + 'test', 
+			body: swhs.body,
+			resolveWithFullResponse: true
+			})
 		console.log('***RECEIVED***')
-		console.dir(result);
-		result = hs_client.decryptResponse(result)
+		console.dir(result.headers)
+		console.dir(result.body)
+		result = hs_client.decryptResponse({
+			SWHS_ALGORITHM: result.headers.swhs_algorithm,
+			SWHS_KEY: result.headers.swhs_key,
+			SWHS_IV: result.headers.swhs_iv,
+			is_json: result.body.is_json,
+			enc_body: result.body.enc_body
+		})
 		console.log('***DECRYPTED***')
 		console.dir(result);
 		console.log('********************************************************************')
 		console.log('')
 		
 		//send a different one this time
-		body = hs_client.encryptRequest({
+		swhs = hs_client.encryptRequest({
 			message: "Japan",
 			passcode: 'whereami',
 			action: 'move'
 		})
 		console.log('***SENDING***')
-		console.dir(body)
-		result = await rp({ method: 'POST', json: true, uri: hs_client.uri + 'test', body})
+		console.dir(swhs)
+		result = await rp({ 
+			headers: swhs.headers, 
+			method: 'POST', 
+			json: true, 
+			uri: hs_client.uri + 'test', 
+			body: swhs.body,
+			resolveWithFullResponse: true
+			})
 		console.log('***RECEIVED***')
-		console.dir(result);
-		result = hs_client.decryptResponse(result)
+		console.dir(result.headers)
+		console.dir(result.body)
+		result = hs_client.decryptResponse({
+			SWHS_ALGORITHM: result.headers.swhs_algorithm,
+			SWHS_KEY: result.headers.swhs_key,
+			SWHS_IV: result.headers.swhs_iv,
+			is_json: result.body.is_json,
+			enc_body: result.body.enc_body
+		})
 		console.log('***DECRYPTED***')
 		console.dir(result);
 		console.log('********************************************************************')
 		console.log('')
 	} catch (err) {
-		console.error(err);
+		console.error('failed');
 	}
 }
 

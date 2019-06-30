@@ -1,0 +1,25 @@
+#header {
+    text-align: center;
+    height: 10px;
+}
+
+#footer {
+    vertical-align: middle;
+    text-align: center;
+    height: 180px;
+    margin: 20px;
+}
+
+.paragraph {
+    margin-bottom: 30px;
+}
+
+.x {
+    background-color: #FFF;
+    margin: 0px;
+}
+
+.y {
+    background-color: #DDD;
+    margin: 2px;
+}

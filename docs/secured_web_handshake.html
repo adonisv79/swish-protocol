@@ -1,0 +1,108 @@
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>Session Web Handshake Standard</title>
+        <link rel='stylesheet' href="docs.css" />
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    </head>
+    <body class="shrine-login">
+        <div class="container-fluid y">
+            <div id="header" class="row">
+                <div class="col-12 header"></div>
+            </div>
+            <div class="row">
+                <div class="col-1"></div>
+                <div class="col-10 x">
+                    <br/>
+                    <h2 class="text-center">Session Web Handshake Standard</h2>
+                    <h6  class="text-center">Securing communications between client and servers using short lived hybrid cryptography</h6>
+                    <hr />
+                    <br/>
+                    <h3>Introduction</h3>
+                    <div class="paragraph">
+                        Security has always been a problem for web development. We use "HTTP" as the default protocol which is not secured as whatever we sent thru it will be sent exactly... just like your password in plain text!
+                        with that in mind, imagine someone looking into your network trafic and stealing your credentials so easily. it can be your co-worker, a hacker, a staff the company whose service you are accessing and so on...
+                    </div>
+                    <div class="paragraph">
+                        Here comes "HTTPS" and "VPN" to the rescue but what are they and how do they work? what are there advantages and limitations? I will not pretend to be an expert on this and explain these 2 technologies as I understand it in semi-layman's term<br/>
+                        <br/>
+                        <b>HTTPS</b>
+                        <ul>
+                            <li>The 'S' in "HTTPS" basically means secured thus also called HTTP-Secured.</li>
+                            <li>it works is by adding a layer of encryption from the browser to the target service owner by using SSL certificates which includes a Public that enables clients to send data to your APIs encrypted while you hold the private key to decrypt them.</li>
+                            <li>The certificate is only used for the initial handshake in which afterwards, a new set of keys will be genrated called "session keys" which will allow our APIs to also send back to them encrypted.</li>
+                            <li>This certificate is also held (and mostly produced) by  a Certificate Authority (CA) that investigates your company and site to ensure the domain's authenticity.</li>
+                            <li>The browsers we use verify with the CA's to detect whether the site the are in is secured or not. If verified, the browser makes it visble to the user by showing a padlock symbol and green highlighted URL to indicate an all-clear sign, red if unverified.</li>    
+                        </ul> 
+                        
+                        <b>VPN</b>
+                        <ul>
+                            <li>Stands for "Virtual Private Network" and as the name suggests its not really private but is virtualized because you do not use a private line but a public line wherein the communications is secured in some way.</li>
+                            <li>VPNs simulates a network infrastructure which could help mask the origin of the clients and use a local IP of the server instead for making the calls (Tunneling). This is what makes it popular such that it allows people to access services not available in their region</li>
+                            <li>VPNs secure the transmission by encrypting the data from your device to their server making the call on your behalf</li>
+                        </ul>
+
+                        <br/>
+                        <b>Everything seems secured using just these! So why build a new way to secure the transmission data?</b>
+                        <ul>
+                            <li>Remember when I mentioned the parties involved? The CA (Which may have ties to governments), the 3rd party VPNs (who can still look at your data before they encrypt it) and the Browser (i.e. Chrome "by Google" which collects our data for its business)? </li>
+                            <li>We as humans rely on a higher authority and believe immediately that such entities will have our best interests at heart. In reality, the only security is a security which you control. Adding more entities to manage your security for you only adds more vectors for attack.</li>
+                            <li>Cost! If we do not need HTTPS and VPNs but still want to secure our data, what do we use? We need something that can work with HTTP alone or combined with these secured process as an additional measure</li>
+                            <li>VPN is not end to end encryption. They may start encrypting from your request up to the point their server makes the requestr, but that request is no longer encrypted unless it by them otherwise how will they make the proper call?</li>
+                            <li>HTTPS encryption is managed in the SESSION Layer of the OSI model. This is where the browser starts to encrypt your requests. But what is stopping a compromised or malicious browser from sending these data to themselves first? same as well for your 3rd party webserver app?</li>
+                        </ul>
+                    </div>
+                    <h3>So what is SWHS</h3>
+                    <div class="paragraph">
+                        The Session Web Handshake Standard is not a new technology nor is it a concept that is unique and novel. SWHS is a proposed standard for developing services for data sensitive clients which embraces the current best practices utilized by existing web security protocols. It tries to address the following issues that is common in most developers who will work in security
+                        <ul>
+                            <li>What if we will only use HTTP/TCP? Is there a way we can secure data coming in and out from our clients to us?</li>
+                            <li>We already use HTTPS or VPN or Both! but I do not trust these entities and would like to add another layer of security to my clients.</li>
+                            <li>I want the handshake to be unpredictable, such that the handshake keys change for each new connection</li>
+                            <li>I want the encryption to take place in the Application layer for both our managed server an client apps</li>
+                        </ul>
+                        The best solution is always the one where only the 2 parties have full control of the data. Encrpytion should happen in the Applications level before we send the data to the network(client) and after we have fully received the data from the network (server)
+                    </div>
+                    
+                    <h3>How it works?</h3>
+                    <div class="paragraph">
+                        todo... for now please read the code
+                    </div>
+                    <h2>About Me</h2>
+                    <div class="paragraph">
+                        My name is Adonis Lee Villamor, currently working as the Technical Leader for the WEB, Mobile and Backend development for LenddoEFL where I also perform Architectural designs, Assist in product development and ensure the team are having a great and rewarding time working in the company. I am also an MBA student at De LaSalle University (Philippines) which will hopefully be completed this year. I have worked with several projects with different companies (Equicom, Fujitsu, Accenture/Avanade, Navitaire, Samsung, Lenddo) since 2003. My core technologies involve backend APIs and Web but also have knowledge and experiences on Mobile and Desktop clients using Java and C#. While this involves cryptography, something which I often work on as companies require the, I do not claim to be an expert in cryptography at this moment. I leave the best and the brightest to solve the complexity of cracking and developing new and better securities that we can implement to secure our APIs.<br/>
+                        <br/>
+                        For more details, please check out my <a href="https://www.linkedin.com/in/adonisv79/">LinkedIn</a> account
+                    </div>
+                    <h2>References</h2>
+                    <div>
+                        <ul>
+                            <li>https://www.cloudflare.com/learning/ssl/why-is-http-not-secure/</li>
+                            <li>https://thehackernews.com/2015/10/nsa-crack-encryption.html</li>
+                            <li>https://security.stackexchange.com/questions/19681/where-does-ssl-encryption-take-place</li>
+                            <li>https://www.expressvpn.com/internet-privacy/guides/vpn-security-work/</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-1"></div>
+            </div>
+            <div id="footer" class="row">
+                <div class="col-12">
+                    The Secured Web Handshake Standard<br />
+                    Authored By: Adonis Lee Villamor (<a href="https://www.linkedin.com/in/adonisv79/">LinkedIn</a>)<br /> 
+                    Reasearch date: April 2019<br /> 
+                    Open Source Project URL: https://github.com/adonisv79/adon-api-handshake<br />
+                    License: MIT
+                </div>
+            </div>
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    </body>
+</html>

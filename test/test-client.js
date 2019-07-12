@@ -11,7 +11,7 @@ const hs_client = new HandshakeClient({
 });
 
 async function test () {	
-	hs_client.resetKeys(); //creates a new handshake key pairing
+	//hs_client.resetKeys(); //creates a new handshake key pairing
 	try{
 		let swhs = hs_client.generateHandshake();
 		console.log('********************************************************************');
@@ -28,12 +28,16 @@ async function test () {
 		console.log('***HANDSHAKE:RECEIVED***');
         console.dir(result.headers);
         console.dir(result.body);
-		var data = hs_client.handleHandshakeResponse(result.headers, result.body);
-		console.log('***HANDSHAKE:PAIRED***');
-		console.dir(data.request);
-		console.log('********************************************************************');
-		console.log('');
-		
+		let body = hs_client.handleHandshakeResponse(result.headers, result.body);
+		if (body.status === 'ok') {
+			console.log('***HANDSHAKE:PAIRED***');
+			console.dir(body);
+			console.log('********************************************************************');
+			console.log('');
+		} else {
+			throw new Error('handshake failed!');
+		}
+
 		//now lets start communicating to the secured endpoints
 		swhs = hs_client.encryptRequest({
 			message: "Adonis Villamor",

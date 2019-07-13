@@ -6,7 +6,8 @@ The API Handshake is basically a Hybrid Encryption system (https://en.wikipedia.
 
 For more details on this project, please see the project wiki at https://github.com/adonisv79/adon-api-handshake/wiki
 
-## Installation
+## Installation ![npm](https://img.shields.io/npm/v/adon-api-handshake.svg)
+The module is released and available in NPMJS (https://www.npmjs.com/package/adon-api-handshake) 
 ```
 npm install adon-api-handshake --save
 ```

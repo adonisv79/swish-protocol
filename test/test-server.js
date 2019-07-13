@@ -8,33 +8,25 @@ const bodyParser = require('body-parser');
 const app = express();
 app.use(bodyParser.json());
 
-//now lets make use of the handshak library
+//now lets make use of the handshake library
 const HandshakeServer = require('../index.js').HandshakeServer;
-const auth = new HandshakeServer();
+const hs_server = new HandshakeServer();
 
 //create an endpoint listening to the recommended authentication path
-app.post('/' + auth.path, (req, res) => {
+app.post('/auth/handshake', (req, res) => {
 	try {
-		console.log('********************************************************************');
-		console.log('***HANDSHAKE:REQUESTED***');
-		console.log('header:');
-		console.dir(req.headers);
-		console.log('body:');
-		console.dir(req.body);
+		console.log('################################################################################');
+		console.log('***HANDSHAKE:REQUEST_ACCEPTED***');
 		//generate a unique session id using a session manager
 		const session_id = session.createSession({});
-		const result = auth.handleHandshakeRequest(req.headers, session_id);
+		console.log('Session:' +session_id);
+		const result = hs_server.handleHandshakeRequest(req.headers, session_id);
 
 		//store the next request decryption items in the session
 		session.find(session_id).decrypt = result.decrypt;
 
 		console.log('***HANDSHAKE:RESPONDING***');
-		console.log('header:');
-		console.dir(result.headers);
-		console.log('body:');
 		console.dir(result.body);
-		console.log('********************************************************************');
-		console.log('');
 		res.set(result.headers);
 		res.send(result.body);
 	} catch (err) {
@@ -43,14 +35,9 @@ app.post('/' + auth.path, (req, res) => {
 	}
 });
 
-//create a test endpoint to see if data are transfered securely
+//create a test endpoint to see if data are transferred securely
 app.post('/test', (req, res) => {
 	try {
-		console.log('***RECEIVED***');
-		console.log('header:');
-		console.dir(req.headers);
-		console.log('body:');
-		console.dir(req.body);
 		//retrieve the private key and passphrase for the session and decryptRequest
 		if (!session.find(req.headers.swhs_sess_id)) {
 			res.send(403, 'Invalid Session');
@@ -58,9 +45,9 @@ app.post('/test', (req, res) => {
 		const private_key = session.find(req.headers.swhs_sess_id).decrypt.next_prv;
 		const passphrase = session.find(req.headers.swhs_sess_id).decrypt.created_date;
 		//get the decrypted request
-		const dec_req = auth.decryptRequest(req.headers, req.body, private_key, passphrase);
+		const dec_req = hs_server.decryptRequest(req.headers, req.body, private_key, passphrase);
 
-		console.log('***DECRYPTED BODY***');
+		console.log('***RECEIVED_REQUEST***');
 		console.dir(dec_req);
 		let response;
 		if (dec_req.body.action == 'hello' && dec_req.body.passcode== 'whoami') {
@@ -71,12 +58,12 @@ app.post('/test', (req, res) => {
 			res_body = {secret_response: 'Unknown action, should be hello or move'}
 		}
 		//encrypt the response body before sending
-		response = auth.encryptResponse(req.headers.swhs_sess_id, res_body, dec_req.next_pub);
+		response = hs_server.encryptResponse(req.headers.swhs_sess_id, res_body, dec_req.next_pub);
 		//store the next request decryption items in the session
 		session.find(req.headers.swhs_sess_id).decrypt = response.decrypt;
 
 		console.log('***RESPONDED***');
-		console.dir(response);
+		console.dir(response.body);
 		console.log('********************************************************************');
 		console.log('');
 		res.set(response.headers);

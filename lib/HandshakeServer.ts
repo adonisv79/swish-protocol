@@ -1,6 +1,7 @@
-const HybridCryptography = require('./HybridCryptography');
+import { default as HybridCryptography, SwhsHeaders } from "./HybridCryptography";
+import { BinaryLike } from "crypto";
 
-module.exports = class HandshakeServer extends HybridCryptography {
+export default class HandshakeServer extends HybridCryptography {
 
 	constructor() {
 		super();
@@ -12,7 +13,7 @@ module.exports = class HandshakeServer extends HybridCryptography {
 	 * @param session_id - the unique session identifier
 	 * @returns {{headers: {swhs_iv: *, swhs_action: string, swhs_sess_id: *, swhs_key: *, swhs_next: string}, body: {is_json: boolean, enc_body: string}, decrypt: {next_prv: CryptoKey, created_date: number}}}
 	 */
-	handleHandshakeRequest(headers, session_id) {
+	handleHandshakeRequest(headers: SwhsHeaders, session_id: string) {
 		//validate the headers and ensure request is for handshake
 		this.validateSwhsHeader(headers);
 		if (headers.swhs_action !== 'handshake_init') {
@@ -38,15 +39,15 @@ module.exports = class HandshakeServer extends HybridCryptography {
 	 * @param passphrase - the Passphrase used to generate the RSA private key
 	 * @returns {{next_pub: string, body: string}}
 	 */
-	decryptRequest(headers, req_body, next_prv, passphrase) {
-		let decrypted = this.hybridDecrypt(
-			req_body.enc_body,
-			req_body.is_json,
-            headers.swhs_next,
-			next_prv,
-			passphrase,
-            headers.swhs_key,
-            headers.swhs_iv);
+	decryptRequest(
+		headers:SwhsHeaders, 
+		enc_body: string, 
+		is_json: boolean = false, 
+		next_prv: Buffer, 
+		passphrase: string) {
+
+		let decrypted = this.hybridDecrypt(enc_body,is_json,headers.swhs_next,
+			next_prv,passphrase,headers.swhs_key,headers.swhs_iv);
 
 		return {
 			body: decrypted.data,
@@ -62,7 +63,7 @@ module.exports = class HandshakeServer extends HybridCryptography {
 	 * @param rsa_pub - The RSA public key to be used to encrypt the data
 	 * @returns {{headers: {swhs_iv: *, swhs_action: string, swhs_sess_id: *, swhs_key: *, swhs_next: string}, body: {is_json: boolean, enc_body: string}, decrypt: {next_prv: CryptoKey, created_date: number}}}
 	 */
-	encryptResponse(swhs_sess_id, body, rsa_pub) {
+	encryptResponse(swhs_sess_id: string, body: BinaryLike | object, rsa_pub: Buffer | string) {
 		if (!rsa_pub) {
 			throw new Error('PUBLIC_KEY_INVALID')
 		} else if (!body) {

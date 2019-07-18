@@ -1,21 +1,23 @@
-import crypto from "crypto";
-import { generateKeyPairSync  } from "crypto";
+import { default as crypto, BinaryLike, generateKeyPairSync } from "crypto";
 const _supported_rsa_sizes = [512, 1024, 2048, 4096];
-
+export type Algorithms = 'aes-128-cbc';
+export type RsaSizes = 512 | 1024;
 export type SwhsHeaders = {
 	swhs_action: string;
 	swhs_key: string;
 	swhs_iv: string;
 	swhs_next: string;
+	swhs_sess_id: string;
 }
 	
-export class HybridCryptography {
+export default class HybridCryptography {
 
 	/**
 	 * This function validates the required header fields for all SWHS handshake and transactions
 	 * @param headers - the HTTP Headers in the request
 	 */
 	validateSwhsHeader(headers: SwhsHeaders){
+
         if (typeof headers != 'object'){
             throw new Error("HEADER_SWHS_OBJECT_INVALID");
         } else if (!headers.swhs_action) {
@@ -32,20 +34,18 @@ export class HybridCryptography {
     }
 
 	/**
-	 * applies AES Encryption using an AES key and iv and returns the encrypted data (in base64 form)
-	 * @param data - the data to encrypt
-	 * @param key - the AES Key (should be byte array, but if its a base64 string, it is cast to a byte array)
-	 * @param iv - the AES Initialization Vector (should be byte array, but if its a base64 string, it is cast to a byte array)
-	 * @param algorithm - The algorithm to use (optional and defaults to aes-128-cbc)
+	 * Applies AES Encryption using an AES key and iv and returns the encrypted data (in base64 form)
+	 * @param data The data to encrypt
+	 * @param key The AES Key (should be byte array, but if its a base64 string, it is cast to a byte array)
+	 * @param iv The AES Initialization Vector (should be byte array, but if its a base64 string, it is cast to a byte array)
+	 * @param algorithm The algorithm to use (optional and defaults to aes-128-cbc)
 	 * @returns {string} The encrypted data cast into a base64 string
 	 */
-	aesEncrypt(data, key, iv, algorithm = 'aes-128-cbc') {
-		if (!(typeof data === 'object' || typeof data === 'string'))
-		throw new Error('DATA_IS_INVALID');
-		if (!(typeof key === 'array' || typeof key === 'string'))
-		throw new Error('KEY_IS_INVALID');
-		if (!(typeof iv === 'array' || typeof iv === 'string'))
-		throw new Error('IV_IS_INVALID');
+	aesEncrypt(
+		data: BinaryLike , 
+		key: Buffer | string, 
+		iv: Buffer | string, 
+		algorithm: Algorithms = 'aes-128-cbc') {
 
 		if (typeof key === 'string') key = Buffer.from(key, "base64");
 		if (typeof iv === 'string') iv = Buffer.from(iv, "base64");
@@ -55,21 +55,27 @@ export class HybridCryptography {
 	}
 
 	/**
-	 * applies AES Decryption to the base64+AES encrypted data using an AES key and iv and returns the decrypted data in its original form)
-	 * @param enc_data - The encrypted data to decrypt
-	 * @param is_json - Indicates if it was originally a JSON object, if true then it will be returned as JSON
-	 * @param key - the AES Key (should be byte array, but if its a base64 string, it is cast to a byte array)
-	 * @param iv - the AES Initialization Vector (should be byte array, but if its a base64 string, it is cast to a byte array)
-	 * @param algorithm - The algorithm to use (optional and defaults to aes-128-cbc)
-	 * @returns {string}
+	 * Applies AES Decryption to the base64+AES encrypted data using an AES key and iv and returns the decrypted data in its original form)
+	 * @param enc_data The encrypted data to decrypt
+	 * @param is_json Indicates if it was originally a JSON object, if true then it will be returned as JSON
+	 * @param key the AES Key (should be byte array, but if its a base64 string, it is cast to a byte array)
+	 * @param iv the AES Initialization Vector (should be byte array, but if its a base64 string, it is cast to a byte array)
+	 * @param algorithm The algorithm to use (optional and defaults to aes-128-cbc)
+	 * @returns {string | object}
 	 */
-	aesDecrypt(enc_data, is_json, key, iv, algorithm = 'aes-128-cbc') {
+	aesDecrypt(
+		enc_data: string, 
+		is_json: boolean = false, 
+		key: Buffer | string, 
+		iv: Buffer | string, 
+		algorithm: Algorithms = 'aes-128-cbc') {
+
 		if (typeof key === 'string') key = Buffer.from(key, "base64");
 		if (typeof iv === 'string') iv = Buffer.from(iv, "base64");
-		enc_data = Buffer.from(enc_data, "base64");
-		let decipher = crypto.createDecipheriv(algorithm, key, iv);
-		let dec_data = decipher.update(enc_data);
-		dec_data = Buffer.concat([dec_data, decipher.final()]).toString();
+		const enc_data_buff = Buffer.from(enc_data, "base64");
+		const decipher = crypto.createDecipheriv(algorithm, key, iv);
+		const dec_data_buff = decipher.update(enc_data_buff);
+		let dec_data: string | Buffer = Buffer.concat([dec_data_buff, decipher.final()]).toString();
 		if (is_json) dec_data = JSON.parse(dec_data);
 		return dec_data;
 	}
@@ -79,7 +85,8 @@ export class HybridCryptography {
 	 * @param algorithm - The algorithm to use (optional and defaults to aes-128-cbc)
 	 * @returns {{iv: *, key: *}}
 	 */
-	createAESEncryptionKey(algorithm = 'aes-128-cbc') {
+	createAESEncryptionKey(algorithm: Algorithms = 'aes-128-cbc') {
+
 		let size;
 		switch(algorithm) {
 			case 'aes-128-cbc':
@@ -99,7 +106,11 @@ export class HybridCryptography {
 	 * @param modulus_length - The modulus length to use (optional and defaults to 512)
 	 * @returns {{public_key: CryptoKey | string, private_key: CryptoKey}}
 	 */
-	createRSAEncrytptionKey(passphrase, algorithm = 'aes-128-cbc', modulus_length = 512) {
+	createRSAEncrytptionKey(
+		passphrase: string, 
+		algorithm: Algorithms = 'aes-128-cbc', 
+		modulus_length: RsaSizes = 512) {
+
 		if (_supported_rsa_sizes.indexOf(modulus_length) == -1) {
 			throw new Error('INVALID_MODULUS_LENGTH');
 		}
@@ -135,13 +146,22 @@ export class HybridCryptography {
 	 * @param algorithm - The algorithm to use (optional and defaults to aes-128-cbc)
 	 * @returns {{next_pub: string, data: string}}
 	 */
-	hybridDecrypt(enc_data, is_json, rsa_next_pub, private_key, passphrase, key, iv, algorithm = 'aes-128-cbc') {
+	hybridDecrypt(
+		enc_data: string, 
+		is_json: boolean = false, 
+		rsa_next_pub: string, 
+		private_key: Buffer, 
+		passphrase: string, 
+		key: Buffer | string, 
+		iv: Buffer | string, 
+		algorithm: Algorithms = 'aes-128-cbc') {
+
 		try{
 			//decrypt the base64 AES key and IV
-			const key_bytes = Buffer.from(key, "base64");
-			key = crypto.privateDecrypt({ key: private_key, passphrase } , key_bytes);
-			const iv_bytes = Buffer.from(iv, "base64");
-			iv = crypto.privateDecrypt({ key: private_key, passphrase } , iv_bytes);
+			if (typeof key === 'string') key = Buffer.from(key, "base64");
+			key = crypto.privateDecrypt({ key: private_key, passphrase } , key);
+			if (typeof iv === 'string') iv = Buffer.from(iv, "base64");
+			iv = crypto.privateDecrypt({ key: private_key, passphrase } , iv);
 			const next_pub = this.aesDecrypt(rsa_next_pub,false, key, iv);
 
 			let data;
@@ -162,17 +182,20 @@ export class HybridCryptography {
 	 * @param modulus_length - The modulus length to use (optional and defaults to 512)
 	 * @returns {{next_prv: CryptoKey, is_json: boolean, next_pub: string, created_date: number, enc_data: string, iv: *, key: *}}
 	 */
-	hybridEncrypt(data, rsa_pub, algorithm = 'aes-128-cbc', modulus_length = 512) {
+	hybridEncrypt(data: BinaryLike | object, 
+		rsa_pub: Buffer | string, 
+		algorithm: Algorithms = 'aes-128-cbc', 
+		modulus_length: RsaSizes = 512) {
 		try{
 			let is_json = false;
-			if (typeof data === 'object') {
+			if (typeof data === 'object') { //cast JSON objects to stringified json
 				is_json = true;
 				data = JSON.stringify(data);
 			}
 
 			//lets create the next RSA public key to use (Double Ratchet)
 			const date = new Date();
-			const rsa_keys = this.createRSAEncrytptionKey(date.getTime(), algorithm, modulus_length);
+			const rsa_keys = this.createRSAEncrytptionKey(date.getTime().toString(), algorithm, modulus_length);
 			//create a new symetric key set
 			const aes_set = this.createAESEncryptionKey(algorithm);
 			//encrypt the data and next public key with the AES symetric key

@@ -1,4 +1,5 @@
-const HybridCryptography = require('./HybridCryptography');
+import {default as HybridCryptography, SwhsHeaders} from "./HybridCryptography";
+import { BinaryLike } from "crypto";
 
 module.exports = class HandshakeClient extends HybridCryptography{
 
@@ -6,7 +7,7 @@ module.exports = class HandshakeClient extends HybridCryptography{
 	 * Gets the current client session id
 	 * @returns {null}
 	 */
-	get sessionId() {
+	get sessionId(): string {
 		return this._session_id;
 	}
 
@@ -21,7 +22,7 @@ module.exports = class HandshakeClient extends HybridCryptography{
 	 * Validates the headers with added keys expected from a server response
 	 * @param headers
 	 */
-	validateResponseSwhsHeader(headers) {
+	validateResponseSwhsHeader(headers: SwhsHeaders) {
 		this.validateSwhsHeader(headers);
 
 		if (!headers.swhs_sess_id) {
@@ -38,7 +39,7 @@ module.exports = class HandshakeClient extends HybridCryptography{
 	generateHandshake() {
 		//create a new RSA key pair
 		const date = new Date();
-		const rsa = this.createRSAEncrytptionKey(date.getTime());
+		const rsa = this.createRSAEncrytptionKey(date.getTime().toString());
 		this._session_id = null;
 		this._keys = {
 			created_date: date.getTime(),
@@ -72,7 +73,7 @@ module.exports = class HandshakeClient extends HybridCryptography{
 	 * @param body - the request body to encrypt
 	 * @returns {{headers: {swhs_iv: *, swhs_sess_id: null, swhs_key: *, swhs_next: string}, body: {is_json: boolean, enc_body}}}
 	 */
-	encryptRequest(body) {
+	encryptRequest(body: BinaryLike | object) {
 		if (!body) {
 			throw new Error('BODY_INVALID')
 		} else if (!this._keys || !this._keys.next_pub) {
@@ -103,11 +104,11 @@ module.exports = class HandshakeClient extends HybridCryptography{
 	 * @param body - The response body
 	 * @returns {string}
 	 */
-	handleHandshakeResponse(headers, body) {
+	handleHandshakeResponse(headers: SwhsHeaders, enc_body: string) {
 		//if new session id, assign it
 		if (!this._session_id && headers.swhs_sess_id) this._session_id = headers.swhs_sess_id;
 		//retrieve the next request sequenced pub key
-		return this.decryptResponse(headers, body);
+		return this.decryptResponse(headers, enc_body, true);
 	}
 
 	/**
@@ -116,12 +117,12 @@ module.exports = class HandshakeClient extends HybridCryptography{
 	 * @param body - The response body
 	 * @returns {string}
 	 */
-	decryptResponse(headers, body) {
+	decryptResponse(headers:SwhsHeaders, enc_body: string, is_json: boolean = false) {
 		try {
 			this.validateResponseSwhsHeader(headers);
 			let decrypted = this.hybridDecrypt(
-				body.enc_body,
-				body.is_json,
+				enc_body,
+				is_json,
 				headers.swhs_next,
 				this._keys.next_prv,
 				this._keys.created_date,

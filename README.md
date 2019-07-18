@@ -15,5 +15,8 @@ npm install adon-api-handshake --save
 Full guide is in the Wiki
 
 ## History
+### Migration to TypeScript (added in 1.2.0)
+We have started unit testing and boy it is a mess as we need to validate through several possible ways anyone will mess your code thru invalid parameter injection. We need a standardized way to strict type it and no one comes close to TypeScript such that most projects are moving towards it.
+
 ### Double Ratchet (added in 1.1.0)
 We enhance the algorithm by applying a double ratchet approach similar to most messaging encryption apps. Each communication will basically generate a new private key and pass its new public key. these sets are used for the next request or response chain making it almost crazy to crack unlike in the previous version where getting the current session key allows a hacker to snoop thru ALL messages in the session. now they need to be part of the entire conversation chain or they will be lost.

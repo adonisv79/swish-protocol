@@ -1,6 +1,6 @@
 {
   "name": "adon-api-handshake",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "An API Authentication mechanism using Hybrid Cryptography in order to monitor and manage sessions with an API",
   "main": "index.js",
   "scripts": {

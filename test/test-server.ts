@@ -1,7 +1,7 @@
 "use strict";
 
 //lets start with a basic session handler.
-import { SessionManagerBasic } from 'adon-api-session';
+const SessionManagerBasic = require('adon-api-session').SessionManagerBasic;
 const session = new SessionManagerBasic();
 //lets setup our web server sample using express
 const port = 3000;
@@ -38,7 +38,7 @@ app.post('/auth/handshake', (req: any, res: any) => {
 });
 
 //create a test endpoint to see if data are transferred securely
-app.post('/test', (req, res) => {
+app.post('/test', (req:any , res:any) => {
 	try {
 		//retrieve the private key and passphrase for the session and decryptRequest
 		if (!session.find(req.headers.swhs_sess_id)) {
@@ -51,7 +51,7 @@ app.post('/test', (req, res) => {
 
 		console.log('***RECEIVED_REQUEST***');
 		console.dir(dec_req);
-		let response;
+		let response, res_body;
 		if (dec_req.body.action == 'hello' && dec_req.body.passcode== 'whoami') {
 			res_body = {secret_response: 'Hello ' + dec_req.body.message}
 		}else if (dec_req.body.action == 'move' && dec_req.body.passcode== 'whereami') {

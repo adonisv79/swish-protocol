@@ -1,4 +1,4 @@
-import { default as HybridCryptography, SwhsHeaders } from "./HybridCryptography";
+import { default as HybridCryptography, SwhsHeaders, SwhsBody } from "./HybridCryptography";
 import { BinaryLike } from "crypto";
 
 export default class HandshakeServer extends HybridCryptography {
@@ -41,16 +41,15 @@ export default class HandshakeServer extends HybridCryptography {
 	 */
 	decryptRequest(
 		headers:SwhsHeaders, 
-		enc_body: string, 
-		is_json: boolean = false, 
+		body: SwhsBody, 
 		next_prv: Buffer, 
 		passphrase: string) {
 
-		let decrypted = this.hybridDecrypt(enc_body,is_json,headers.swhs_next,
+		let decrypted = this.hybridDecrypt(body.enc_body,body.is_json,headers.swhs_next,
 			next_prv,passphrase,headers.swhs_key,headers.swhs_iv);
 
 		return {
-			body: decrypted.data,
+			body: decrypted.data as any,
 			next_pub: decrypted.next_pub
 		};
 	}

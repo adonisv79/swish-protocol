@@ -1,5 +1,5 @@
 import { default as crypto, BinaryLike, generateKeyPairSync } from "crypto";
-const _supported_rsa_sizes = [512, 1024, 2048, 4096];
+
 export type Algorithms = 'aes-128-cbc';
 export type RsaSizes = 512 | 1024;
 export type SwhsHeaders = {
@@ -8,6 +8,10 @@ export type SwhsHeaders = {
 	swhs_iv: string;
 	swhs_next: string;
 	swhs_sess_id: string;
+}
+export type SwhsBody = { 
+	is_json: boolean; 
+	enc_body?: string 
 }
 	
 export default class HybridCryptography {
@@ -111,9 +115,6 @@ export default class HybridCryptography {
 		algorithm: Algorithms = 'aes-128-cbc', 
 		modulus_length: RsaSizes = 512) {
 
-		if (_supported_rsa_sizes.indexOf(modulus_length) == -1) {
-			throw new Error('INVALID_MODULUS_LENGTH');
-		}
 		const keys = generateKeyPairSync('rsa', {
 			modulusLength: modulus_length,
 			publicKeyEncoding: {
@@ -150,7 +151,7 @@ export default class HybridCryptography {
 		enc_data: string, 
 		is_json: boolean = false, 
 		rsa_next_pub: string, 
-		private_key: Buffer, 
+		private_key: Buffer | string, 
 		passphrase: string, 
 		key: Buffer | string, 
 		iv: Buffer | string, 

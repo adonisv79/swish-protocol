@@ -1,7 +1,8 @@
 const rp = require('request-promise');
-const HandshakeClient = require('../index.js').HandshakeClient;
-const SERVER_URL = 'http://localhost:3000';
+import { BinaryLike } from "crypto";
+import { HandshakeClient } from "../index";
 
+const SERVER_URL = 'http://localhost:3000';
 const hs_client = new HandshakeClient();
 
 async function test () {
@@ -28,7 +29,7 @@ async function test () {
 			action: 'move'
 		});
 	} catch (err) {
-		console.error('[ERROR]:' + err.message);
+		console.error(err);
 	}
 }
 
@@ -44,17 +45,17 @@ async function testHandShake() {
 		body: swhs.body,
 		resolveWithFullResponse: true
 	});
-	const dec = hs_client.handleHandshakeResponse(response.headers, response.body);
 	console.log('***HANDSHAKE:RECEIVED***');
+	const dec: any = hs_client.handleHandshakeResponse(response.headers, response.body);
 	console.dir(dec);
 	return dec;
 }
 
-async function testRequest(body) {
+async function testRequest(body: BinaryLike | object) {
 	console.log('***SENDING***');
 	console.dir(body);
-	swhs = hs_client.encryptRequest(body);
-	response = await rp({
+	const swhs = hs_client.encryptRequest(body);
+	const response = await rp({
 		headers: swhs.headers,
 		method: 'POST',
 		json: true,
@@ -62,7 +63,7 @@ async function testRequest(body) {
 		body: swhs.body,
 		resolveWithFullResponse: true
 	});
-	const dec = hs_client.decryptResponse(response.headers, response.body);
+	const dec: any = hs_client.decryptResponse(response.headers, response.body);
 	console.log('***RECEIVED_RESPONSE***');
 	console.dir(dec);
 	console.log('********************************************************************');

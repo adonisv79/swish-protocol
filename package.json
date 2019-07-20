@@ -5,7 +5,10 @@
   "main": "dist/src/index.js",
   "files": [ "dist/src" ],
   "scripts": {
-    "test": "jest --coverage"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:coveralls": "jest --coverage --coverageReporters=text-lcov | coveralls"
   },
   "repository": {
     "type": "git",
@@ -23,6 +26,7 @@
     "@types/node": "^12.6.8",
     "adon-api-session": "1.0.0",
     "body-parser": "1.19.0",
+    "coveralls": "^3.0.5",
     "express": "4.17.1",
     "jest": "^24.8.0",
     "request": "2.88.0",

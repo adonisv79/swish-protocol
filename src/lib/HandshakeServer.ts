@@ -45,7 +45,7 @@ export default class HandshakeServer extends HybridCryptography {
 		next_prv: Buffer, 
 		passphrase: string) {
 
-		let decrypted = this.hybridDecrypt(body.enc_body,body.is_json,headers.swhs_next,
+		let decrypted = this.hybridDecrypt(body,headers.swhs_next,
 			next_prv,passphrase,headers.swhs_key,headers.swhs_iv);
 
 		return {

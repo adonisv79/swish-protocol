@@ -2,7 +2,7 @@ import {default as HybridCryptography, SwhsHeaders, SwhsBody} from "./HybridCryp
 import { BinaryLike } from "crypto";
 
 export default class HandshakeClient extends HybridCryptography{
-	_session_id: string;
+	_session_id!: string;
 	_keys: {
 		next_pub: Buffer | string,
 		next_prv: Buffer | string,
@@ -20,8 +20,8 @@ export default class HandshakeClient extends HybridCryptography{
 	constructor() {
 		super();
 		//set the default
-		this._keys = null;
-		this._session_id = null;
+		this._keys = { next_pub: "", next_prv: "", created_date: -1 };
+		this._session_id = "";
 	}
 
 	/**
@@ -46,7 +46,7 @@ export default class HandshakeClient extends HybridCryptography{
 		//create a new RSA key pair
 		const date = new Date();
 		const rsa = this.createRSAEncrytptionKey(date.getTime().toString());
-		this._session_id = null;
+		this._session_id = "";
 		this._keys = {
 			created_date: date.getTime(),
 			next_prv: rsa.private_key,
@@ -129,8 +129,7 @@ export default class HandshakeClient extends HybridCryptography{
 		try {
 			this.validateResponseSwhsHeader(headers);
 			let decrypted = this.hybridDecrypt(
-				body.enc_body,
-				body.is_json,
+				body,
 				headers.swhs_next,
 				this._keys.next_prv,
 				this._keys.created_date.toString(),

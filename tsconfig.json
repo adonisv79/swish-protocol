@@ -1,23 +1,21 @@
 {
     "compilerOptions": {
+        "target": "es6",
         "module": "commonjs",
+        "lib": ["es2015"],
+        "strict": true,
+        "declaration": true,
         "removeComments": true,
         "preserveConstEnums": true,
         "esModuleInterop": true,
-        "target": "es6",
         "noImplicitAny": true,
         "moduleResolution": "node",
+        "sourceRoot": "src",
         "sourceMap": true,
-        "outDir": "dist",
-        "baseUrl": ".",
+        "rootDir":"./src",
+        "outDir": "dist"
     },
-    "files": [
-        "index.ts"
-    ],
-    "include":[
-        "lib/**/*",
-        "test/**/*"
-    ],
+    "include":[ "src/**/*" ],
     "exclude": [
         "node_modules",
         "coverage",

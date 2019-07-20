@@ -148,8 +148,7 @@ export default class HybridCryptography {
 	 * @returns {{next_pub: string, data: string}}
 	 */
 	hybridDecrypt(
-		enc_data: string, 
-		is_json: boolean = false, 
+		body: SwhsBody, 
 		rsa_next_pub: string, 
 		private_key: Buffer | string, 
 		passphrase: string, 
@@ -166,8 +165,8 @@ export default class HybridCryptography {
 			const next_pub = this.aesDecrypt(rsa_next_pub,false, key, iv);
 
 			let data;
-			if (enc_data) {
-				data = this.aesDecrypt(enc_data, is_json, key, iv)
+			if (body.enc_body) {
+				data = this.aesDecrypt(body.enc_body, body.is_json, key, iv)
 			}
 			return { data, next_pub };
 		} catch (err) {

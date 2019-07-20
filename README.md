@@ -4,10 +4,9 @@ An API Authentication Mechanism in order to monitor and manage sessions between 
 ## Project stats
 * Latest Version: ![npm](https://img.shields.io/npm/v/adon-api-handshake.svg)
 * License: ![GitHub](https://img.shields.io/github/license/adonisv79/adon-api-handshake.svg)
-* Unit test results: [![Build Status](https://travis-ci.org/adonisv79/adon-api-handshake.svg?branch=master)](https://travis-ci.org/adonisv79/adon-api-handshake)
-* Code Coverage:
-  * develop: [![Coverage Status](https://coveralls.io/repos/github/adonisv79/adon-api-handshake/badge.svg?branch=develop)](https://coveralls.io/github/adonisv79/adon-api-handshake?branch=develop)
-  * master: [![Coverage Status](https://coveralls.io/repos/github/adonisv79/adon-api-handshake/badge.svg)](https://coveralls.io/github/adonisv79/adon-api-handshake)
+* CICD:
+  * develop: Unit Test [![Build Status](https://travis-ci.org/adonisv79/adon-api-handshake.svg?branch=develop)](https://travis-ci.org/adonisv79/adon-api-handshake); Code Coverage [![Coverage Status](https://coveralls.io/repos/github/adonisv79/adon-api-handshake/badge.svg?branch=develop)](https://coveralls.io/github/adonisv79/adon-api-handshake?branch=develop)
+  * master: Unit Test [![Build Status](https://travis-ci.org/adonisv79/adon-api-handshake.svg?branch=master)](https://travis-ci.org/adonisv79/adon-api-handshake); Code Coverage [![Coverage Status](https://coveralls.io/repos/github/adonisv79/adon-api-handshake/badge.svg)](https://coveralls.io/github/adonisv79/adon-api-handshake)
 
 ## How it works
 The API Handshake is basically a Hybrid Encryption system (https://en.wikipedia.org/wiki/Hybrid_cryptosystem) which is built for managing short to medium term Client-Server sessions. This is usefull for ensuring that whenever a client needs to connect to an API, the transmitted communication medium is encrypted. On top of that, when that session is destroyed, the transmitted data are as good as gone! To continue communicating, the client needs to perform a new handshake. As of v1.1.0, we have added a double ratchet mechanism to even complicate things. :p

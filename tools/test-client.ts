@@ -1,6 +1,6 @@
 const rp = require('request-promise');
 import { BinaryLike } from "crypto";
-import { HandshakeClient } from "../index";
+import { HandshakeClient } from "../src/index";
 
 const SERVER_URL = 'http://localhost:3000';
 const hs_client = new HandshakeClient();

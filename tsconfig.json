@@ -11,10 +11,10 @@
         "moduleResolution": "node",
         "noImplicitAny": true,
         "outDir": "dist",
-        "rootDir":"./src",
+        "rootDir":".",
         "sourceRoot": "src",
         "sourceMap": true
     },
-    "include":[ "src/**/*","tests/**/*" ],
+    "include":[ "src/**/*", "tools/**/*" ],
     "exclude": [ "node_modules", "coverage", "**/*.test.ts" ]
 }

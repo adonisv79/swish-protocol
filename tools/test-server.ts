@@ -11,7 +11,7 @@ const app = express();
 app.use(bodyParser.json());
 
 //now lets make use of the handshake library
-import { HandshakeServer } from "../index";
+import { HandshakeServer } from "../src/index";
 const hs_server = new HandshakeServer();
 
 //create an endpoint listening to the recommended authentication path

@@ -1,9 +1,9 @@
 {
   "name": "adon-api-handshake",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "An API Authentication mechanism using Hybrid Cryptography in order to monitor and manage sessions with an API",
-  "main": "dist/index.js",
-  "files": [ "dist" ],
+  "main": "dist/src/index.js",
+  "files": [ "dist/src" ],
   "scripts": {
     "test": "jest --coverage"
   },

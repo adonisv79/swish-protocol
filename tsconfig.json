@@ -8,17 +8,13 @@
         "removeComments": true,
         "preserveConstEnums": true,
         "esModuleInterop": true,
-        "noImplicitAny": true,
         "moduleResolution": "node",
-        "sourceRoot": "src",
-        "sourceMap": true,
+        "noImplicitAny": true,
+        "outDir": "dist",
         "rootDir":"./src",
-        "outDir": "dist"
+        "sourceRoot": "src",
+        "sourceMap": true
     },
-    "include":[ "src/**/*" ],
-    "exclude": [
-        "node_modules",
-        "coverage",
-        "**/*.test.ts"
-    ]
+    "include":[ "src/**/*","tests/**/*" ],
+    "exclude": [ "node_modules", "coverage", "**/*.test.ts" ]
 }

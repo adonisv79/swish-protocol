@@ -21,12 +21,11 @@ export default class HybridCryptography {
 	 * @param headers - the HTTP Headers in the request
 	 */
 	validateSwhsHeader(headers: SwhsHeaders){
-
-        if (typeof headers != 'object'){
-            throw new Error("HEADER_SWHS_OBJECT_INVALID");
-        } else if (!headers.swhs_action) {
-            throw new Error("HEADER_SWHS_ACTION_INVALID");
-        } else if (!headers.swhs_key) {
+        if (headers.swhs_action.length > 50) {
+            throw new Error("HEADER_SWHS_ACTION_LEN_ERR");
+		} 
+		
+		if (!headers.swhs_key) {
             throw new Error("HEADER_SWHS_KEY_INVALID");
         } else if (!headers.swhs_iv) {
             throw new Error("HEADER_SWHS_IV_INVALID");

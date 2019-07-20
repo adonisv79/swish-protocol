@@ -1,4 +1,4 @@
-# adon-api-handshake ![npm](https://img.shields.io/npm/v/adon-api-handshake.svg) ![GitHub](https://img.shields.io/github/license/adonisv79/adon-api-handshake.svg) [![Build Status](https://travis-ci.org/adonisv79/adon-api-handshake.svg?branch=master)](https://travis-ci.org/adonisv79/adon-api-handshake)
+# adon-api-handshake ![npm](https://img.shields.io/npm/v/adon-api-handshake.svg) ![GitHub](https://img.shields.io/github/license/adonisv79/adon-api-handshake.svg) [![Build Status](https://travis-ci.org/adonisv79/adon-api-handshake.svg?branch=master)](https://travis-ci.org/adonisv79/adon-api-handshake) [![Coverage Status](https://coveralls.io/repos/github/adonisv79/adon-api-handshake/badge.svg)](https://coveralls.io/github/adonisv79/adon-api-handshake)
 An API Authentication Mechanism in order to monitor and manage sessions between clients and an API.
 
 ## How it works

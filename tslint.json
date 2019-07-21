@@ -4,11 +4,13 @@
         "tslint-config-prettier",
         "tslint-plugin-prettier"
     ],
+    "linterOptions": {
+        "exclude": [
+            "docs"
+        ]
+    },
     "rules": {
-        // Formatting rules
         "prettier": true,
-
-        // Don't want these
         "cyclomatic-complexity": false,
         "increment-decrement": false,
         "newline-before-return": false,
@@ -17,8 +19,6 @@
         "no-unused-variable": false,
         "typedef": false,
         "unnecessary-else": false,
-
-        // TODO: Enable stricter options for these
         "comment-format": {
             "options": [
                 "check-space"
@@ -31,8 +31,6 @@
                 "allow-named-functions"
             ]
         },
-
-        // TODO: Enable these
         "completed-docs": false,
         "no-any": false,
         "no-magic-numbers": false,
@@ -68,8 +66,6 @@
                 "variable-declaration": "onespace"
             }
         ],
-        
-        // Misc
         "ban": {
             "options": [
                 [
@@ -94,11 +90,7 @@
                 "order": "statics-first"
             }
         },
-        "no-console": {
-            "options": [
-                "log"
-            ]
-        },
+        "no-console": false,
         "no-switch-case-fall-through": true,
         "strict-boolean-expressions": {
             "options": [

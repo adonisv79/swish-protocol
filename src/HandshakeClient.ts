@@ -13,7 +13,7 @@ export default class HandshakeClient extends HybridCryptography{
 	 * Gets the current client session id
 	 * @returns {null}
 	 */
-	get sessionId(): string {
+	public get sessionId(): string {
 		return this._session_id;
 	}
 
@@ -28,7 +28,7 @@ export default class HandshakeClient extends HybridCryptography{
 	 * Validates the headers with added keys expected from a server response
 	 * @param headers
 	 */
-	validateResponseSwhsHeader(headers: SwhsHeaders) {
+	public validateResponseSwhsHeader(headers: SwhsHeaders): void {
 		this.validateSwhsHeader(headers);
 
 		if (!headers.swhs_sess_id) {
@@ -42,7 +42,7 @@ export default class HandshakeClient extends HybridCryptography{
 	 * Generates a new handshake request and retrieve the next generated SWHS header values
 	 * @returns {{headers: {swhs_iv: string, swhs_action: string, swhs_sess_id: string, swhs_key: string, swhs_next: string}, body: {is_json: boolean}}}
 	 */
-	generateHandshake(): { headers:SwhsHeaders, body: SwhsBody} {
+	public generateHandshake(): { headers: SwhsHeaders, body: SwhsBody} {
 		//create a new RSA key pair
 		const date = new Date();
 		const rsa = this.createRSAEncrytptionKey(date.getTime().toString());
@@ -66,7 +66,7 @@ export default class HandshakeClient extends HybridCryptography{
 				swhs_action: 'handshake_init',
 				swhs_key: aes_set.key.toString('base64'),
 				swhs_iv: aes_set.iv.toString('base64'),
-                swhs_next: enc_next_pub
+				swhs_next: enc_next_pub
 			},
 			body: {
 				is_json: false
@@ -79,7 +79,7 @@ export default class HandshakeClient extends HybridCryptography{
 	 * @param body - the request body to encrypt
 	 * @returns {{headers: {swhs_iv: *, swhs_sess_id: null, swhs_key: *, swhs_next: string}, body: {is_json: boolean, enc_body}}}
 	 */
-	encryptRequest(body: BinaryLike | object): { headers: SwhsHeaders, body: SwhsBody } {
+	public encryptRequest(body: BinaryLike | object): { headers: SwhsHeaders, body: SwhsBody } {
 		if (!body) {
 			throw new Error('BODY_INVALID')
 		} else if (!this._keys || !this._keys.next_pub) {
@@ -111,7 +111,7 @@ export default class HandshakeClient extends HybridCryptography{
 	 * @param body - The response body
 	 * @returns {string}
 	 */
-	handleHandshakeResponse(headers: SwhsHeaders, body: SwhsBody) {
+	public handleHandshakeResponse(headers: SwhsHeaders, body: SwhsBody) {
 		console.dir(body)
 		//if new session id, assign it
 		if (!this._session_id && headers.swhs_sess_id) this._session_id = headers.swhs_sess_id;
@@ -125,7 +125,7 @@ export default class HandshakeClient extends HybridCryptography{
 	 * @param body - The response body
 	 * @returns {string}
 	 */
-	decryptResponse(headers:SwhsHeaders, body: SwhsBody) {
+	public decryptResponse(headers:SwhsHeaders, body: SwhsBody) {
 		try {
 			this.validateResponseSwhsHeader(headers);
 			let decrypted = this.hybridDecrypt(

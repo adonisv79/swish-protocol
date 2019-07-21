@@ -1,7 +1,10 @@
-import { default as HybridCryptography, SwhsHeaders, SwhsBody } from "./HybridCryptography";
+import {
+	default as HybridCryptography,
+	SwhsHeaders,
+	SwhsBody } from "./HybridCryptography";
 import { BinaryLike } from "crypto";
 
-export type SwhsDecryption = {
+export interface SwhsDecryption {
 	next_prv: string;
 	created_date: number;
 }

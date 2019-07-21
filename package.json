@@ -3,8 +3,12 @@
   "version": "1.2.2",
   "description": "An API Authentication mechanism using Hybrid Cryptography in order to monitor and manage sessions with an API",
   "main": "dist/src/index.js",
-  "files": [ "dist/src" ],
+  "files": [
+    "dist/src"
+  ],
   "scripts": {
+    "dist:client":"node dist/tools/test-client",
+    "dist:server":"node dist/tools/test-server",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -14,7 +18,11 @@
     "type": "git",
     "url": "git+https://github.com/adonisv79/adon-api-handshake.git"
   },
-  "keywords": [ "adon", "api", "handshake" ],
+  "keywords": [
+    "adon",
+    "api",
+    "handshake"
+  ],
   "author": "Adonis Lee Villamor <adonisv79@gmail.com> (http://www.bytecommander.com)",
   "license": "MIT",
   "bugs": {
@@ -32,6 +40,7 @@
     "request": "2.88.0",
     "request-promise": "4.2.4",
     "ts-jest": "^24.0.2",
+    "tslint": "^5.18.0",
     "typescript": "^3.5.3"
   }
 }

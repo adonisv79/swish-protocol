@@ -5,7 +5,7 @@ import { HandshakeClient } from "../src/index";
 const SERVER_URL = 'http://localhost:3000';
 const hs_client = new HandshakeClient();
 
-async function test (): void {
+async function test () {
 	try{
 		let handshake_response = await testHandShake();
 
@@ -17,17 +17,11 @@ async function test (): void {
 
 		//now lets start communicating to the secured endpoints
 		await testRequest({
-			message: "Adonis Villamor",
-			passcode: 'whoami',
-			action: 'hello'
+			message: "Adonis Villamor", passcode: 'whoami', action: 'hello',
 		});
 
 		//send a different one this time
-		await testRequest({
-			message: "Japan",
-			passcode: 'whereami',
-			action: 'move'
-		});
+		await testRequest({ message: "Japan", passcode: 'whereami', action: 'move' });
 	} catch (err) {
 		console.error(err);
 	}

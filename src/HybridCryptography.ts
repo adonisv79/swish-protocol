@@ -2,14 +2,20 @@ import { default as crypto, BinaryLike, generateKeyPairSync } from "crypto";
 
 export type Algorithms = 'aes-128-cbc';
 export type RsaSizes = 512 | 1024;
-export type SwhsHeaders = {
+export interface SwhsHeaders {
 	swhs_action: string;
 	swhs_iv: string;
 	swhs_key: string;
 	swhs_next: string;
 	swhs_sess_id: string;
 }
-export type SwhsBody = { 
+const SwhsHeaderRules = {
+	swhs_action: {
+		maxlen: 50
+	}
+};
+
+export interface SwhsBody { 
 	enc_body?: string;
 	is_json: boolean; 
 }
@@ -20,8 +26,8 @@ export default class HybridCryptography {
 	 * This function validates the required header fields for all SWHS handshake and transactions
 	 * @param headers - the HTTP Headers in the request
 	 */
-	protected validateSwhsHeader(headers: SwhsHeaders){
-		if (headers.swhs_action.length > 50) {
+	public validateSwhsHeader(headers: SwhsHeaders){
+		if (headers.swhs_action.length > SwhsHeaderRules.swhs_action.maxlen) {
 			throw new Error("HEADER_SWHS_ACTION_LEN_ERR");
 		} 
 		
@@ -52,17 +58,18 @@ export default class HybridCryptography {
 
 		if (typeof key === 'string') key = Buffer.from(key, "base64");
 		if (typeof iv === 'string') iv = Buffer.from(iv, "base64");
-		let cipher = crypto.createCipheriv(algorithm, key, iv);
-		let enc_data = cipher.update(data);
+		const cipher = crypto.createCipheriv(algorithm, key, iv);
+		const enc_data = cipher.update(data);
 		return Buffer.concat([enc_data, cipher.final()]).toString('base64');
 	}
 
 	/**
-	 * Applies AES Decryption to the base64+AES encrypted data using an AES key and iv and returns the decrypted data in its original form)
+	 * Applies AES Decryption to the base64+AES encrypted data using an AES key and iv 
+	 * and returns the decrypted data in its original form)
 	 * @param enc_data The encrypted data to decrypt
 	 * @param is_json Indicates if it was originally a JSON object, if true then it will be returned as JSON
-	 * @param key the AES Key (should be byte array, but if its a base64 string, it is cast to a byte array)
-	 * @param iv the AES Initialization Vector (should be byte array, but if its a base64 string, it is cast to a byte array)
+	 * @param key the AES Key
+	 * @param iv the AES Initialization Vector
 	 * @param algorithm The algorithm to use (optional and defaults to aes-128-cbc)
 	 * @returns {string | object}
 	 */

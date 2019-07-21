@@ -1,7 +1,13 @@
 import { default as HybridCryptography, SwhsHeaders, SwhsBody } from "./HybridCryptography";
 import { BinaryLike } from "crypto";
 
+export type SwhsDecryption = {
+	next_prv: string;
+	created_date: number;
+}
+
 export default class HandshakeServer extends HybridCryptography {
+
 
 	constructor() {
 		super();
@@ -13,7 +19,7 @@ export default class HandshakeServer extends HybridCryptography {
 	 * @param session_id - the unique session identifier
 	 * @returns {{headers: {swhs_iv: *, swhs_action: string, swhs_sess_id: *, swhs_key: *, swhs_next: string}, body: {is_json: boolean, enc_body: string}, decrypt: {next_prv: CryptoKey, created_date: number}}}
 	 */
-	handleHandshakeRequest(headers: SwhsHeaders, session_id: string) {
+	public handleHandshakeRequest(headers: SwhsHeaders, session_id: string) {
 		//validate the headers and ensure request is for handshake
 		this.validateSwhsHeader(headers);
 		if (headers.swhs_action !== 'handshake_init') {
@@ -39,7 +45,7 @@ export default class HandshakeServer extends HybridCryptography {
 	 * @param passphrase - the Passphrase used to generate the RSA private key
 	 * @returns {{next_pub: string, body: string}}
 	 */
-	decryptRequest(
+	public decryptRequest(
 		headers:SwhsHeaders, 
 		body: SwhsBody, 
 		next_prv: Buffer, 
@@ -59,10 +65,11 @@ export default class HandshakeServer extends HybridCryptography {
 	 * Encrypt the response with the session public key
 	 * @param swhs_sess_id - the unique session identifier
 	 * @param body - the response body to encrypt
-	 * @param rsa_pub - The RSA public key to be used to encrypt the data
-	 * @returns {{headers: {swhs_iv: *, swhs_action: string, swhs_sess_id: *, swhs_key: *, swhs_next: string}, body: {is_json: boolean, enc_body: string}, decrypt: {next_prv: CryptoKey, created_date: number}}}
 	 */
-	encryptResponse(swhs_sess_id: string, body: BinaryLike | object, rsa_pub: Buffer | string) {
+	public encryptResponse(
+		swhs_sess_id: string, 
+		body: BinaryLike | object, rsa_pub: Buffer | string
+		): { headers: SwhsHeaders, body: SwhsBody, decrypt: SwhsDecryption} {
 		if (!rsa_pub) {
 			throw new Error('PUBLIC_KEY_INVALID')
 		} else if (!body) {
@@ -73,11 +80,11 @@ export default class HandshakeServer extends HybridCryptography {
 		const result = this.hybridEncrypt(body, rsa_pub);
 		return {
 			headers: {
-				'swhs_sess_id': swhs_sess_id,
-                'swhs_action': 'encrypt_response',
-                'swhs_key': result.key,
-                'swhs_iv': result.iv,
-                'swhs_next': result.next_pub
+				'swhs_action': 'encrypt_response',
+				'swhs_iv': result.iv,
+				'swhs_key': result.key,
+				'swhs_next': result.next_pub,
+				'swhs_sess_id': swhs_sess_id
 			},
 			body: {
 				is_json: result.is_json,
@@ -85,7 +92,7 @@ export default class HandshakeServer extends HybridCryptography {
 			},
 			decrypt: {
 				next_prv: result.next_prv,
-                created_date: result.created_date
+				created_date: result.created_date
 			}
 		}
 	}

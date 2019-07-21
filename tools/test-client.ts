@@ -5,7 +5,7 @@ import { HandshakeClient } from "../src/index";
 const SERVER_URL = 'http://localhost:3000';
 const hs_client = new HandshakeClient();
 
-async function test () {
+async function test (): void {
 	try{
 		let handshake_response = await testHandShake();
 
@@ -45,6 +45,7 @@ async function testHandShake() {
 		body: swhs.body,
 		resolveWithFullResponse: true
 	});
+	
 	console.log('***HANDSHAKE:RECEIVED***');
 	const dec: any = hs_client.handleHandshakeResponse(response.headers, response.body);
 	console.dir(dec);

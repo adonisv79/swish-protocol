@@ -4,14 +4,14 @@ export type Algorithms = 'aes-128-cbc';
 export type RsaSizes = 512 | 1024;
 export type SwhsHeaders = {
 	swhs_action: string;
-	swhs_key: string;
 	swhs_iv: string;
+	swhs_key: string;
 	swhs_next: string;
 	swhs_sess_id: string;
 }
 export type SwhsBody = { 
+	enc_body?: string;
 	is_json: boolean; 
-	enc_body?: string 
 }
 	
 export default class HybridCryptography {
@@ -20,21 +20,21 @@ export default class HybridCryptography {
 	 * This function validates the required header fields for all SWHS handshake and transactions
 	 * @param headers - the HTTP Headers in the request
 	 */
-	validateSwhsHeader(headers: SwhsHeaders){
-        if (headers.swhs_action.length > 50) {
-            throw new Error("HEADER_SWHS_ACTION_LEN_ERR");
+	protected validateSwhsHeader(headers: SwhsHeaders){
+		if (headers.swhs_action.length > 50) {
+			throw new Error("HEADER_SWHS_ACTION_LEN_ERR");
 		} 
 		
 		if (!headers.swhs_key) {
-            throw new Error("HEADER_SWHS_KEY_INVALID");
-        } else if (!headers.swhs_iv) {
-            throw new Error("HEADER_SWHS_IV_INVALID");
-        } else if (!headers.swhs_next) {
-            throw new Error("HEADER_SWHS_NEXT_INVALID");
-        } else {
+			throw new Error("HEADER_SWHS_KEY_INVALID");
+		} else if (!headers.swhs_iv) {
+			throw new Error("HEADER_SWHS_IV_INVALID");
+		} else if (!headers.swhs_next) {
+			throw new Error("HEADER_SWHS_NEXT_INVALID");
+		} else {
 			return true;
 		}
-    }
+	}
 
 	/**
 	 * Applies AES Encryption using an AES key and iv and returns the encrypted data (in base64 form)
@@ -44,7 +44,7 @@ export default class HybridCryptography {
 	 * @param algorithm The algorithm to use (optional and defaults to aes-128-cbc)
 	 * @returns {string} The encrypted data cast into a base64 string
 	 */
-	aesEncrypt(
+	protected aesEncrypt(
 		data: BinaryLike , 
 		key: Buffer | string, 
 		iv: Buffer | string, 
@@ -66,7 +66,7 @@ export default class HybridCryptography {
 	 * @param algorithm The algorithm to use (optional and defaults to aes-128-cbc)
 	 * @returns {string | object}
 	 */
-	aesDecrypt(
+	protected aesDecrypt(
 		enc_data: string, 
 		is_json: boolean = false, 
 		key: Buffer | string, 
@@ -88,7 +88,7 @@ export default class HybridCryptography {
 	 * @param algorithm - The algorithm to use (optional and defaults to aes-128-cbc)
 	 * @returns {{iv: *, key: *}}
 	 */
-	createAESEncryptionKey(algorithm: Algorithms = 'aes-128-cbc') {
+	protected createAESEncryptionKey(algorithm: Algorithms = 'aes-128-cbc') {
 
 		let size;
 		switch(algorithm) {
@@ -109,7 +109,7 @@ export default class HybridCryptography {
 	 * @param modulus_length - The modulus length to use (optional and defaults to 512)
 	 * @returns {{public_key: CryptoKey | string, private_key: CryptoKey}}
 	 */
-	createRSAEncrytptionKey(
+	protected createRSAEncrytptionKey(
 		passphrase: string, 
 		algorithm: Algorithms = 'aes-128-cbc', 
 		modulus_length: RsaSizes = 512) {
@@ -146,7 +146,7 @@ export default class HybridCryptography {
 	 * @param algorithm - The algorithm to use (optional and defaults to aes-128-cbc)
 	 * @returns {{next_pub: string, data: string}}
 	 */
-	hybridDecrypt(
+	protected hybridDecrypt(
 		body: SwhsBody, 
 		rsa_next_pub: string, 
 		private_key: Buffer | string, 
@@ -181,7 +181,7 @@ export default class HybridCryptography {
 	 * @param modulus_length - The modulus length to use (optional and defaults to 512)
 	 * @returns {{next_prv: CryptoKey, is_json: boolean, next_pub: string, created_date: number, enc_data: string, iv: *, key: *}}
 	 */
-	hybridEncrypt(data: BinaryLike | object, 
+	protected hybridEncrypt(data: BinaryLike | object, 
 		rsa_pub: Buffer | string, 
 		algorithm: Algorithms = 'aes-128-cbc', 
 		modulus_length: RsaSizes = 512) {
@@ -201,7 +201,7 @@ export default class HybridCryptography {
 			const enc_data = this.aesEncrypt(data, aes_set.key, aes_set.iv);
 			const next_pub = this.aesEncrypt(rsa_keys.public_key, aes_set.key, aes_set.iv);
 			//now encrypt the aes key+iv with the public key and make each base64
-			const iv  = crypto.publicEncrypt(rsa_pub, aes_set.iv).toString('base64');
+			const iv = crypto.publicEncrypt(rsa_pub, aes_set.iv).toString('base64');
 			const key = crypto.publicEncrypt(rsa_pub, aes_set.key).toString('base64');
 			
 			return {

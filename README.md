@@ -2,18 +2,18 @@
 An API Authentication Mechanism in order to monitor and manage sessions between clients and an API.
 
 ## Project stats
-* Latest Version: ![npm](https://img.shields.io/npm/v/adon-api-handshake.svg)
-* License: ![GitHub](https://img.shields.io/github/license/adonisv79/adon-api-handshake.svg)
-* CICD:
-  * develop: Unit Test [![Build Status](https://travis-ci.org/adonisv79/adon-api-handshake.svg?branch=develop)](https://travis-ci.org/adonisv79/adon-api-handshake); Code Coverage [![Coverage Status](https://coveralls.io/repos/github/adonisv79/adon-api-handshake/badge.svg?branch=develop)](https://coveralls.io/github/adonisv79/adon-api-handshake?branch=develop)
-  * master: Unit Test [![Build Status](https://travis-ci.org/adonisv79/adon-api-handshake.svg?branch=master)](https://travis-ci.org/adonisv79/adon-api-handshake); Code Coverage [![Coverage Status](https://coveralls.io/repos/github/adonisv79/adon-api-handshake/badge.svg)](https://coveralls.io/github/adonisv79/adon-api-handshake)
+* Package: [![npm](https://img.shields.io/npm/v/adon-api-handshake.svg)](https://www.npmjs.com/package/adon-api-handshake) [![npm](https://img.shields.io/npm/dm/adon-api-handshake.svg)](https://www.npmjs.com/package/adon-api-handshake)
+* License: [![GitHub](https://img.shields.io/github/license/adonisv79/adon-api-handshake.svg)](https://github.com/adonisv79/adon-api-handshake/blob/master/LICENSE)
+* CICD: [![Codacy Badge](https://api.codacy.com/project/badge/Grade/3709f3ab3b0c4380b5a41e010e8628c0)](https://www.codacy.com/app/adonisv79/adon-api-handshake?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=adonisv79/adon-api-handshake&amp;utm_campaign=Badge_Grade)
+  * develop: [![Build Status](https://travis-ci.org/adonisv79/adon-api-handshake.svg?branch=develop)](https://travis-ci.org/adonisv79/adon-api-handshake) [![Coverage Status](https://coveralls.io/repos/github/adonisv79/adon-api-handshake/badge.svg?branch=develop)](https://coveralls.io/github/adonisv79/adon-api-handshake?branch=develop)
+  * master: [![Build Status](https://travis-ci.org/adonisv79/adon-api-handshake.svg?branch=master)](https://travis-ci.org/adonisv79/adon-api-handshake) [![Coverage Status](https://coveralls.io/repos/github/adonisv79/adon-api-handshake/badge.svg)](https://coveralls.io/github/adonisv79/adon-api-handshake)
 
 ## How it works
 The API Handshake is basically a Hybrid Encryption system (https://en.wikipedia.org/wiki/Hybrid_cryptosystem) which is built for managing short to medium term Client-Server sessions. This is usefull for ensuring that whenever a client needs to connect to an API, the transmitted communication medium is encrypted. On top of that, when that session is destroyed, the transmitted data are as good as gone! To continue communicating, the client needs to perform a new handshake. As of v1.1.0, we have added a double ratchet mechanism to even complicate things. :p
 
 For more details on this project, please see the project wiki at https://github.com/adonisv79/adon-api-handshake/wiki
 
-## Installation ![npm](https://img.shields.io/npm/v/adon-api-handshake.svg)
+## Installation [![npm](https://img.shields.io/npm/v/adon-api-handshake.svg)]
 The module is released and available in NPMJS (https://www.npmjs.com/package/adon-api-handshake) 
 ```
 npm install adon-api-handshake --save

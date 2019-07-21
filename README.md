@@ -1,4 +1,4 @@
-# adon-api-handshake
+# adon-api-handshake [![Known Vulnerabilities](https://snyk.io/test/github/adonisv79/adon-api-handshake/badge.svg]
 An API Authentication Mechanism in order to monitor and manage sessions between clients and an API.
 
 ## Project stats
@@ -30,3 +30,5 @@ We have started unit testing and boy it is a mess as we need to validate through
 
 ### Double Ratchet (added in 1.1.0)
 We enhance the algorithm by applying a double ratchet approach similar to most messaging encryption apps. Each communication will basically generate a new private key and pass its new public key. these sets are used for the next request or response chain making it almost crazy to crack unlike in the previous version where getting the current session key allows a hacker to snoop thru ALL messages in the session. now they need to be part of the entire conversation chain or they will be lost.
+
+[![Known Vulnerabilities](https://snyk.io/test/github/adonisv79/adon-api-handshake/badge.svg](https://snyk.io/test/github/adonisv79/adon-api-handshake)

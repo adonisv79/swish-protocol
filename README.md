@@ -22,7 +22,7 @@ npm install adon-api-handshake --save
 Full guide is in the Wiki
 
 ## History
-### Migration to TypeScript (added in 1.2.2)
+### Migration to TypeScript and CICD (added in 1.2.3)
 We have started unit testing and boy it is a mess as we need to validate through several possible ways anyone will mess your code thru invalid parameter injection. We need a standardized way to strict type it and no one comes close to TypeScript such that most projects are moving towards it. Modified the unit tests and code coverage as well to allow for Typescript support. We have also utilized popular open-source quality and CI tools like Codacy, Jest and Travis
 
 *do not use 1.2.0, it pointed to the wrong index.js file and was hotfixed via 1.2.1 

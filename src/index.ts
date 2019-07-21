@@ -1,2 +1,7 @@
-export { default as HandshakeClient } from "./HandshakeClient";
-export { default as HandshakeServer } from "./HandshakeServer";
+import { HandshakeClient } from "./HandshakeClient";
+import { HandshakeServer } from "./HandshakeServer";
+
+export {
+	HandshakeClient,
+	HandshakeServer,
+};

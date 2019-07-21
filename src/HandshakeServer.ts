@@ -1,16 +1,17 @@
-import {
-	default as HybridCryptography,
-	SwhsHeaders,
-	SwhsBody } from "./HybridCryptography";
+
 import { BinaryLike } from "crypto";
+
+import {
+	HybridCryptography,
+	SwhsBody,
+	SwhsHeaders } from "./HybridCryptography";
 
 export interface SwhsDecryption {
 	next_prv: string;
 	created_date: number;
 }
 
-export default class HandshakeServer extends HybridCryptography {
-
+export class HandshakeServer extends HybridCryptography {
 
 	constructor() {
 		super();
@@ -19,24 +20,24 @@ export default class HandshakeServer extends HybridCryptography {
 	/**
 	 * Handles a handshake request from a new client
 	 * @param headers - the request headers
-	 * @param session_id - the unique session identifier
-	 * @returns {{headers: {swhs_iv: *, swhs_action: string, swhs_sess_id: *, swhs_key: *, swhs_next: string}, body: {is_json: boolean, enc_body: string}, decrypt: {next_prv: CryptoKey, created_date: number}}}
+	 * @param sessionId - the unique session identifier
 	 */
-	public handleHandshakeRequest(headers: SwhsHeaders, session_id: string) {
-		//validate the headers and ensure request is for handshake
+	public handleHandshakeRequest(headers: SwhsHeaders, sessionId: string) {
+		// validate the headers and ensure request is for handshake
 		this.validateSwhsHeader(headers);
-		if (headers.swhs_action !== 'handshake_init') {
+		if (headers.swhs_action !== "handshake_init") {
 			throw new Error("HANDSHAKE_INVALID: swhs_action is not handshake_init");
 		}
 
-		//first lets decrypt that public key for sending our responses to this client
-		const response_pub_key = this.aesDecrypt(headers.swhs_next, false,
+		// first lets decrypt that public key for sending our responses to this client
+		const responsePubKey = this.aesDecrypt(
+			headers.swhs_next, false,
 			headers.swhs_key, headers.swhs_iv);
 
-		//encrypt an ok response using the client's response public key
-		const result = this.encryptResponse(session_id, { status: 'ok' }, response_pub_key);
+		// encrypt an ok response using the client's response public key
+		const result = this.encryptResponse(sessionId, { status: "ok" }, responsePubKey);
 
-		result.headers.swhs_action = 'handshake_response'; //override the action value
+		result.headers.swhs_action = "handshake_response"; // override the action value
 		return result;
 	}
 
@@ -46,57 +47,61 @@ export default class HandshakeServer extends HybridCryptography {
 	 * @param req_body - the request body
 	 * @param next_prv - the RSA private key used to decrypt the req_body
 	 * @param passphrase - the Passphrase used to generate the RSA private key
-	 * @returns {{next_pub: string, body: string}}
 	 */
 	public decryptRequest(
-		headers:SwhsHeaders, 
-		body: SwhsBody, 
-		next_prv: Buffer, 
+		headers: SwhsHeaders,
+		body: SwhsBody,
+		nextPrv: Buffer,
 		passphrase: string) {
 
-		let decrypted = this.hybridDecrypt(body,headers.swhs_next,
-			next_prv,passphrase,headers.swhs_key,headers.swhs_iv);
+		const decrypted = this.hybridDecrypt(
+			body,
+			headers.swhs_next,
+			nextPrv,
+			passphrase,
+			headers.swhs_key,
+			headers.swhs_iv);
 
 		return {
 			body: decrypted.data as any,
-			next_pub: decrypted.next_pub
+			next_pub: decrypted.nextPub,
 		};
 	}
 
-
 	/**
 	 * Encrypt the response with the session public key
-	 * @param swhs_sess_id - the unique session identifier
+	 * @param swhsSessionId - the unique session identifier
 	 * @param body - the response body to encrypt
 	 */
 	public encryptResponse(
-		swhs_sess_id: string, 
-		body: BinaryLike | object, rsa_pub: Buffer | string
-		): { headers: SwhsHeaders, body: SwhsBody, decrypt: SwhsDecryption} {
-		if (!rsa_pub) {
-			throw new Error('PUBLIC_KEY_INVALID')
+		swhsSessionId: string,
+		body: BinaryLike | object,
+		rsaPub: Buffer | string,
+		): { headers: SwhsHeaders; body: SwhsBody; decrypt: SwhsDecryption} {
+		if (!rsaPub) {
+			throw new Error("PUBLIC_KEY_INVALID");
 		} else if (!body) {
-			throw new Error('BODY_INVALID')
+			throw new Error("BODY_INVALID");
 		}
 
-		//use Hybrid Encryption and return the response in the proper structure
-		const result = this.hybridEncrypt(body, rsa_pub);
+		// use Hybrid Encryption and return the response in the proper structure
+		const result = this.hybridEncrypt(body, rsaPub);
 		return {
-			headers: {
-				'swhs_action': 'encrypt_response',
-				'swhs_iv': result.iv,
-				'swhs_key': result.key,
-				'swhs_next': result.next_pub,
-				'swhs_sess_id': swhs_sess_id
-			},
 			body: {
-				is_json: result.is_json,
-				enc_body: result.enc_data
+				enc_body: result.encData,
+				is_json: result.isJson,
 			},
 			decrypt: {
+				created_date: result.created_date,
 				next_prv: result.next_prv,
-				created_date: result.created_date
-			}
-		}
+			},
+			headers: {
+				swhs_action: "encrypt_response",
+				swhs_iv: result.iv,
+				swhs_key: result.key,
+				swhs_next: result.nextPub,
+				swhs_sess_id: swhsSessionId,
+			},
+		};
 	}
-};
+}

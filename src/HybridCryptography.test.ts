@@ -1,5 +1,5 @@
 import {
-	default as HybridCryptography,
+	HybridCryptography,
 	SwhsHeaders } from "./HybridCryptography";
 const hc = new HybridCryptography();
 
@@ -13,13 +13,19 @@ describe('HybridCryptography.validateSwhsHeader', () => {
 	};
 	
 	test('should ensure there is an swhs_action value in the header', () => {
-		try { hc.validateSwhsHeader(headers) }
-		catch (err) { expect(err.message).toMatch('HEADER_SWHS_ACTION_LEN_ERR');}
+		try { 
+			hc.validateSwhsHeader(headers) 
+		} catch (err) { 
+			expect(err.message).toMatch('HEADER_SWHS_ACTION_LEN_ERR');
+		}
 	});
 	
 	test('should ensure there is an swhs_key value in the header', () => {
 		headers.swhs_action = "something"
-		try { hc.validateSwhsHeader(headers) }
-		catch (err) { expect(err.message).toMatch('HEADER_SWHS_KEY_INVALID');}
+		try {
+			hc.validateSwhsHeader(headers) 
+		} catch (err) {
+			expect(err.message).toMatch('HEADER_SWHS_KEY_INVALID');
+		}
 	});
 });

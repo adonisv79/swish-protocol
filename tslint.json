@@ -1,22 +1,28 @@
 {
     "extends": [
-        "tslint:all",
-        "tslint-config-prettier",
-        "tslint-plugin-prettier"
+        "tslint:all"
     ],
     "linterOptions": {
         "exclude": [
             "docs"
         ]
     },
+    
     "rules": {
-        "prettier": true,
+        "indent": [
+            true,
+            "tabs",
+            4
+        ],
+        "prettier": false,
         "cyclomatic-complexity": false,
         "increment-decrement": false,
         "newline-before-return": false,
+        "no-implicit-dependencies": false,
         "no-parameter-properties": false,
         "no-parameter-reassignment": false,
         "no-unused-variable": false,
+        "no-var-requires": false,
         "typedef": false,
         "unnecessary-else": false,
         "comment-format": {
@@ -79,22 +85,21 @@
             ]
         },
         "interface-name": false,
-        "file-header": {
-            "options": [
-                "Copyright \\d{4} Palantir Technologies, Inc."
-            ]
-        },
+        "file-header": false,
+        "file-name-casing": [false, "pascal-case"],
         "max-classes-per-file": false,
         "member-ordering": {
             "options": {
                 "order": "statics-first"
             }
         },
+        "newline-per-chained-call": false,
         "no-console": false,
         "no-switch-case-fall-through": true,
         "strict-boolean-expressions": {
             "options": [
-                "allow-boolean-or-undefined"
+                "allow-boolean-or-undefined",
+                "allow-string"
             ]
         },
         "switch-default": false,

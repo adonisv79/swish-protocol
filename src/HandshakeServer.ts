@@ -22,11 +22,13 @@ export class HandshakeServer extends HybridCryptography {
 	 * @param headers - the request headers
 	 * @param sessionId - the unique session identifier
 	 */
-	public handleHandshakeRequest(headers: SwhsHeaders, sessionId: string) {
-		// validate the headers and ensure request is for handshake
-		this.validateSwhsHeader(headers);
-		if (headers.swhs_action !== "handshake_init") {
-			throw new Error("HANDSHAKE_INVALID: swhs_action is not handshake_init");
+	public handleHandshakeRequest(headers: SwhsHeaders) {
+		if (headers.swhs_sess_id === "") {
+			throw new Error("SESSION_ID_INVALID");
+		} else if (headers.swhs_action !== "handshake_init") {
+			throw new Error("HANDSHAKE_INVALID_INIT");
+		} else if (headers.swhs_iv.length < 10) {
+			throw new Error("HANDSHAKE_AES_IV_INVALID");
 		}
 
 		// first lets decrypt that public key for sending our responses to this client
@@ -35,7 +37,7 @@ export class HandshakeServer extends HybridCryptography {
 			headers.swhs_key, headers.swhs_iv);
 
 		// encrypt an ok response using the client's response public key
-		const result = this.encryptResponse(sessionId, { status: "ok" }, responsePubKey);
+		const result = this.encryptResponse(headers.swhs_sess_id, { status: "ok" }, responsePubKey);
 
 		result.headers.swhs_action = "handshake_response"; // override the action value
 		return result;

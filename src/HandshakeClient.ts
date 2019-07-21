@@ -28,8 +28,6 @@ export class HandshakeClient extends HybridCryptography {
 	 * Validates the headers with added keys expected from a server response
 	 */
 	public validateResponseSwhsHeader(headers: SwhsHeaders): void {
-		this.validateSwhsHeader(headers);
-
 		if (!headers.swhs_sess_id) {
 			throw new Error("HANDSHAKE_INVALID: Missing header swhs_sess_id");
 		} else if (this.strSessionId && this.strSessionId !== headers.swhs_sess_id) {
@@ -79,7 +77,7 @@ export class HandshakeClient extends HybridCryptography {
 	public encryptRequest(body: BinaryLike | object): { headers: SwhsHeaders; body: SwhsBody } {
 		if (!body) {
 			throw new Error("BODY_INVALID");
-		} else if (!this.objKeys || !this.objKeys.next_pub) {
+		} else if (!this.objKeys.next_pub) {
 			throw new Error("Next public request key is not set!");
 		}
 

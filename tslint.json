@@ -47,6 +47,7 @@
         "no-unnecessary-qualifier": false,
         "no-use-before-declare": false,
         "no-void-expression": false,
+        "one-variable-per-declaration":false,
         "prefer-function-over-method": false,
         "strict-comparisons": false,
         "strict-type-predicates": false,

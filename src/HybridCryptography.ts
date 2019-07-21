@@ -23,26 +23,6 @@ export interface SwhsBody {
 export class HybridCryptography {
 
 	/**
-	 * This function validates the required header fields for all SWHS handshake and transactions
-	 * @param headers - the HTTP Headers in the request
-	 */
-	public validateSwhsHeader(headers: SwhsHeaders) {
-		if (headers.swhs_action.length > SwhsHeaderRules.swhs_action.maxlen) {
-			throw new Error("HEADER_SWHS_ACTION_LEN_ERR");
-		}
-
-		if (!headers.swhs_key) {
-			throw new Error("HEADER_SWHS_KEY_INVALID");
-		} else if (!headers.swhs_iv) {
-			throw new Error("HEADER_SWHS_IV_INVALID");
-		} else if (!headers.swhs_next) {
-			throw new Error("HEADER_SWHS_NEXT_INVALID");
-		} else {
-			return true;
-		}
-	}
-
-	/**
 	 * Applies AES Encryption using an AES key and iv and returns the encrypted data (in base64 form)
 	 * @param data The data to encrypt
 	 * @param key The AES Key (should be byte array, but if its a base64 string, it is cast to a byte array)

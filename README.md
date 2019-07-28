@@ -2,9 +2,9 @@
 An API Authentication Mechanism in order to monitor and manage sessions between clients and an API.
 
 ## Project stats
-* Package: [![npm](https://img.shields.io/npm/v/node-swish-protocol.svg)](https://www.npmjs.com/package/node-swish-protocol) [![npm](https://img.shields.io/npm/dm/node-swish-protocol.svg)](https://www.npmjs.com/package/node-swish-protocol)
+* Package: [![npm](https://img.shields.io/npm/v/swish-protocol.svg)](https://www.npmjs.com/package/swish-protocol) [![npm](https://img.shields.io/npm/dm/swish-protocol.svg)](https://www.npmjs.com/package/swish-protocol)
 * License: [![GitHub](https://img.shields.io/github/license/adonisv79/node-swish-protocol.svg)](https://github.com/adonisv79/node-swish-protocol/blob/master/LICENSE)
-* CICD: [![Codacy Badge](https://api.codacy.com/project/badge/Grade/3709f3ab3b0c4380b5a41e010e8628c0)](https://www.codacy.com/app/adonisv79/node-swish-protocol?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=adonisv79/node-swish-protocol&amp;utm_campaign=Badge_Grade) [![Known Vulnerabilities](https://snyk.io/test/github/adonisv79/node-swish-protocol/badge.svg)](https://snyk.io/test/github/adonisv79/node-swish-protocol)
+* CICD: [![Codacy Badge](https://api.codacy.com/project/badge/Grade/24953a75015c47dc82aeb18ccc9b97d6)](https://www.codacy.com/app/adonisv79/node-swish-protocol?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=adonisv79/node-swish-protocol&amp;utm_campaign=Badge_Grade) [![Known Vulnerabilities](https://snyk.io/test/github/adonisv79/node-swish-protocol/badge.svg)](https://snyk.io/test/github/adonisv79/node-swish-protocol)
   * develop: [![Build Status](https://travis-ci.org/adonisv79/node-swish-protocol.svg?branch=develop)](https://travis-ci.org/adonisv79/node-swish-protocol) [![Coverage Status](https://coveralls.io/repos/github/adonisv79/node-swish-protocol/badge.svg?branch=develop)](https://coveralls.io/github/adonisv79/node-swish-protocol?branch=develop)
   * master: [![Build Status](https://travis-ci.org/adonisv79/node-swish-protocol.svg?branch=master)](https://travis-ci.org/adonisv79/node-swish-protocol) [![Coverage Status](https://coveralls.io/repos/github/adonisv79/node-swish-protocol/badge.svg)](https://coveralls.io/github/adonisv79/node-swish-protocol)
 

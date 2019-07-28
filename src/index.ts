@@ -1,7 +1,3 @@
-import { HandshakeClient } from "./HandshakeClient";
-import { HandshakeServer } from "./HandshakeServer";
-
-export {
-	HandshakeClient,
-	HandshakeServer,
-};
+export { SwhsBody, SwhsHeaders } from "./HybridCryptography";
+export { HandshakeClient } from "./HandshakeClient";
+export { HandshakeServer } from "./HandshakeServer";

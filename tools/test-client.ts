@@ -45,7 +45,9 @@ async function testHandShake() {
 		const dec: any = clientHS.handleHandshakeResponse(response.headers, response.body);
 		console.dir(dec);
 		return dec;
-	});
+	}).catch((err) => {
+		console.error(err);
+	});;
 }
 
 async function testRequest(body: BinaryLike | object) {
@@ -66,7 +68,9 @@ async function testRequest(body: BinaryLike | object) {
 		console.dir(dec);
 		console.log("********************************************************************");
 		console.log("");
-	});
+	}).catch((err) => {
+		console.error(err);
+	});;
 }
 
 void test();

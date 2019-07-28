@@ -1,7 +1,9 @@
 import { BinaryLike, default as crypto, generateKeyPairSync } from "crypto";
 
 export type Algorithms = "aes-128-cbc";
+
 export type RsaSizes = 512 | 1024;
+
 export interface SwhsHeaders {
 	swhs_action: string;
 	swhs_iv: string;
@@ -9,6 +11,7 @@ export interface SwhsHeaders {
 	swhs_next: string;
 	swhs_sess_id: string;
 }
+
 const SwhsHeaderRules = {
 	swhs_action: {
 		maxlen: 50,

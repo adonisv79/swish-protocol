@@ -10,8 +10,7 @@ const app = express();
 app.use(bodyParser.json());
 
 // now lets make use of the handshake library
-import { SwhsHeaders } from "../src/HybridCryptography";
-import { HandshakeServer } from "../src/index";
+import { HandshakeServer, SwhsHeaders } from "../src/index";
 const serverHS = new HandshakeServer();
 
 function getSwhsFromReqHeaders(reqHeaders: IncomingHttpHeaders): SwhsHeaders {

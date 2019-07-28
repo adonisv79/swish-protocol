@@ -3,10 +3,10 @@ import { BinaryLike } from "crypto";
 
 import {
 	HybridCryptography,
-	SwhsBody,
-	SwhsHeaders } from "./HybridCryptography";
+	SwishBody,
+	SwishHeaders } from "./HybridCryptography";
 
-export interface SwhsDecryption {
+export interface SwishDecryption {
 	next_prv: string;
 	created_date: number;
 }
@@ -22,24 +22,24 @@ export class HandshakeServer extends HybridCryptography {
 	 * @param headers - the request headers
 	 * @param sessionId - the unique session identifier
 	 */
-	public handleHandshakeRequest(headers: SwhsHeaders) {
-		if (headers.swhs_sess_id === "") {
+	public handleHandshakeRequest(headers: SwishHeaders) {
+		if (headers.swish_sess_id === "") {
 			throw new Error("SESSION_ID_INVALID");
-		} else if (headers.swhs_action !== "handshake_init") {
+		} else if (headers.swish_action !== "handshake_init") {
 			throw new Error("HANDSHAKE_INVALID_INIT");
-		} else if (headers.swhs_iv.length < 10) {
+		} else if (headers.swish_iv.length < 10) {
 			throw new Error("HANDSHAKE_AES_IV_INVALID");
 		}
 
 		// first lets decrypt that public key for sending our responses to this client
 		const responsePubKey = this.aesDecrypt(
-			headers.swhs_next, false,
-			headers.swhs_key, headers.swhs_iv);
+			headers.swish_next, false,
+			headers.swish_key, headers.swish_iv);
 
 		// encrypt an ok response using the client's response public key
-		const result = this.encryptResponse(headers.swhs_sess_id, { status: "ok" }, responsePubKey);
+		const result = this.encryptResponse(headers.swish_sess_id, { status: "ok" }, responsePubKey);
 
-		result.headers.swhs_action = "handshake_response"; // override the action value
+		result.headers.swish_action = "handshake_response"; // override the action value
 		return result;
 	}
 
@@ -51,18 +51,18 @@ export class HandshakeServer extends HybridCryptography {
 	 * @param passphrase - the Passphrase used to generate the RSA private key
 	 */
 	public decryptRequest(
-		headers: SwhsHeaders,
-		body: SwhsBody,
+		headers: SwishHeaders,
+		body: SwishBody,
 		nextPrv: Buffer,
 		passphrase: string) {
 
 		const decrypted = this.hybridDecrypt(
 			body,
-			headers.swhs_next,
+			headers.swish_next,
 			nextPrv,
 			passphrase,
-			headers.swhs_key,
-			headers.swhs_iv);
+			headers.swish_key,
+			headers.swish_iv);
 
 		return {
 			body: decrypted.data as any,
@@ -72,14 +72,14 @@ export class HandshakeServer extends HybridCryptography {
 
 	/**
 	 * Encrypt the response with the session public key
-	 * @param swhsSessionId - the unique session identifier
+	 * @param swishSessionId - the unique session identifier
 	 * @param body - the response body to encrypt
 	 */
 	public encryptResponse(
-		swhsSessionId: string,
+		swishSessionId: string,
 		body: BinaryLike | object,
 		rsaPub: Buffer | string,
-		): { headers: SwhsHeaders; body: SwhsBody; decrypt: SwhsDecryption} {
+		): { headers: SwishHeaders; body: SwishBody; decrypt: SwishDecryption} {
 		if (!rsaPub) {
 			throw new Error("PUBLIC_KEY_INVALID");
 		} else if (!body) {
@@ -98,11 +98,11 @@ export class HandshakeServer extends HybridCryptography {
 				next_prv: result.next_prv,
 			},
 			headers: {
-				swhs_action: "encrypt_response",
-				swhs_iv: result.iv,
-				swhs_key: result.key,
-				swhs_next: result.nextPub,
-				swhs_sess_id: swhsSessionId,
+				swish_action: "encrypt_response",
+				swish_iv: result.iv,
+				swish_key: result.key,
+				swish_next: result.nextPub,
+				swish_sess_id: swishSessionId,
 			},
 		};
 	}

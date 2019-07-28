@@ -30,12 +30,12 @@ async function test() {
 
 async function testHandShake() {
 	console.log("################################################################################");
-	const swhs = clientHS.generateHandshake();
+	const swish = clientHS.generateHandshake();
 	console.log("***HANDSHAKE:INITIATING***");
 	// run the request. we don't use async await coz request-promise uses bluebird
 	return rp({
-		body: swhs.body,
-		headers: swhs.headers,
+		body: swish.body,
+		headers: swish.headers,
 		json: true,
 		method: "POST",
 		resolveWithFullResponse: true,
@@ -53,11 +53,11 @@ async function testHandShake() {
 async function testRequest(body: BinaryLike | object) {
 	console.log("***SENDING***");
 	console.dir(body);
-	const swhs = clientHS.encryptRequest(body);
+	const swish = clientHS.encryptRequest(body);
 	// run the request. we don't use async await coz request-promise uses bluebird
 	return rp({
-		body: swhs.body,
-		headers: swhs.headers,
+		body: swish.body,
+		headers: swish.headers,
 		json: true,
 		method: "POST",
 		resolveWithFullResponse: true,

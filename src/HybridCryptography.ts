@@ -4,21 +4,21 @@ export type Algorithms = "aes-128-cbc";
 
 export type RsaSizes = 512 | 1024;
 
-export interface SwhsHeaders {
-	swhs_action: string;
-	swhs_iv: string;
-	swhs_key: string;
-	swhs_next: string;
-	swhs_sess_id: string;
+export interface SwishHeaders {
+	swish_action: string;
+	swish_iv: string;
+	swish_key: string;
+	swish_next: string;
+	swish_sess_id: string;
 }
 
-const SwhsHeaderRules = {
-	swhs_action: {
+const SwishHeaderRules = {
+	swish_action: {
 		maxlen: 50,
 	},
 };
 
-export interface SwhsBody {
+export interface SwishBody {
 	enc_body?: string;
 	is_json: boolean;
 }
@@ -133,7 +133,7 @@ export class HybridCryptography {
 	 * @param algorithm - The algorithm to use (optional and defaults to aes-128-cbc)
 	 */
 	protected hybridDecrypt(
-		body: SwhsBody,
+		body: SwishBody,
 		rsaNextPub: string,
 		privateKey: Buffer | string,
 		passphrase: string,
@@ -141,22 +141,18 @@ export class HybridCryptography {
 		iv: Buffer | string,
 		algorithm: Algorithms = "aes-128-cbc") {
 
-		try {
-			// decrypt the base64 AES key and IV
-			if (typeof key === "string") { key = Buffer.from(key, "base64"); }
-			key = crypto.privateDecrypt({ key: privateKey, passphrase } , key);
-			if (typeof iv === "string") { iv = Buffer.from(iv, "base64"); }
-			iv = crypto.privateDecrypt({ key: privateKey, passphrase } , iv);
-			const nextPub = this.aesDecrypt(rsaNextPub, false, key, iv);
+		// decrypt the base64 AES key and IV
+		if (typeof key === "string") { key = Buffer.from(key, "base64"); }
+		key = crypto.privateDecrypt({ key: privateKey, passphrase } , key);
+		if (typeof iv === "string") { iv = Buffer.from(iv, "base64"); }
+		iv = crypto.privateDecrypt({ key: privateKey, passphrase } , iv);
+		const nextPub = this.aesDecrypt(rsaNextPub, false, key, iv);
 
-			let data;
-			if (body.enc_body !== undefined || body.enc_body !== "") {
-				data = this.aesDecrypt((body.enc_body as string), body.is_json, key, iv);
-			}
-			return { data, nextPub };
-		} catch (err) {
-			throw new Error((err as Error).message);
+		let data;
+		if (body.enc_body !== undefined && body.enc_body !== "") {
+			data = this.aesDecrypt((body.enc_body), body.is_json, key, iv);
 		}
+		return { data, nextPub };
 	}
 
 	/**
@@ -171,33 +167,30 @@ export class HybridCryptography {
 		rsaPub: Buffer | string,
 		modulusLength: RsaSizes = 512,
 		algorithm: Algorithms = "aes-128-cbc") {
-		try {
-			let isJson = false;
-			if (typeof data === "object") { // cast JSON objects to stringified json
-				isJson = true;
-				data = JSON.stringify(data);
-			}
 
-			// lets create the next RSA public key to use (Double Ratchet)
-			const date = new Date();
-			const rsaKeys = this.createRSAEncrytptionKey(date.getTime().toString(), algorithm, modulusLength);
-			// create a new symetric key set
-			const aesSet = this.createAESEncryptionKey(algorithm);
-			// encrypt the data and next public key with the AES symetric key
-			const encData = this.aesEncrypt(data, aesSet.key, aesSet.iv);
-			const nextPub = this.aesEncrypt(rsaKeys.public_key, aesSet.key, aesSet.iv);
-			// now encrypt the aes key+iv with the public key and make each base64
-			const iv = crypto.publicEncrypt(rsaPub, aesSet.iv).toString("base64");
-			const key = crypto.publicEncrypt(rsaPub, aesSet.key).toString("base64");
-
-			return {
-				created_date: date.getTime(),
-				encData,
-				isJson, iv, key, nextPub,
-				next_prv: rsaKeys.private_key,
-			};
-		} catch (err) {
-			throw new Error((err as Error).message);
+		let isJson = false;
+		if (typeof data === "object") { // cast JSON objects to stringified json
+			isJson = true;
+			data = JSON.stringify(data);
 		}
+
+		// lets create the next RSA public key to use (Double Ratchet)
+		const date = new Date();
+		const rsaKeys = this.createRSAEncrytptionKey(date.getTime().toString(), algorithm, modulusLength);
+		// create a new symetric key set
+		const aesSet = this.createAESEncryptionKey(algorithm);
+		// encrypt the data and next public key with the AES symetric key
+		const encData = this.aesEncrypt(data, aesSet.key, aesSet.iv);
+		const nextPub = this.aesEncrypt(rsaKeys.public_key, aesSet.key, aesSet.iv);
+		// now encrypt the aes key+iv with the public key and make each base64
+		const iv = crypto.publicEncrypt(rsaPub, aesSet.iv).toString("base64");
+		const key = crypto.publicEncrypt(rsaPub, aesSet.key).toString("base64");
+
+		return {
+			created_date: date.getTime(),
+			encData,
+			isJson, iv, key, nextPub,
+			next_prv: rsaKeys.private_key,
+		};
 	}
 }

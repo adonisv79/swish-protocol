@@ -1,27 +1,30 @@
-# adon-api-handshake
+# node-swish
 An API Authentication Mechanism in order to monitor and manage sessions between clients and an API.
 
 ## Project stats
-* Package: [![npm](https://img.shields.io/npm/v/adon-api-handshake.svg)](https://www.npmjs.com/package/adon-api-handshake) [![npm](https://img.shields.io/npm/dm/adon-api-handshake.svg)](https://www.npmjs.com/package/adon-api-handshake)
-* License: [![GitHub](https://img.shields.io/github/license/adonisv79/adon-api-handshake.svg)](https://github.com/adonisv79/adon-api-handshake/blob/master/LICENSE)
-* CICD: [![Codacy Badge](https://api.codacy.com/project/badge/Grade/3709f3ab3b0c4380b5a41e010e8628c0)](https://www.codacy.com/app/adonisv79/adon-api-handshake?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=adonisv79/adon-api-handshake&amp;utm_campaign=Badge_Grade) [![Known Vulnerabilities](https://snyk.io/test/github/adonisv79/adon-api-handshake/badge.svg)](https://snyk.io/test/github/adonisv79/adon-api-handshake)
-  * develop: [![Build Status](https://travis-ci.org/adonisv79/adon-api-handshake.svg?branch=develop)](https://travis-ci.org/adonisv79/adon-api-handshake) [![Coverage Status](https://coveralls.io/repos/github/adonisv79/adon-api-handshake/badge.svg?branch=develop)](https://coveralls.io/github/adonisv79/adon-api-handshake?branch=develop)
-  * master: [![Build Status](https://travis-ci.org/adonisv79/adon-api-handshake.svg?branch=master)](https://travis-ci.org/adonisv79/adon-api-handshake) [![Coverage Status](https://coveralls.io/repos/github/adonisv79/adon-api-handshake/badge.svg)](https://coveralls.io/github/adonisv79/adon-api-handshake)
+* Package: [![npm](https://img.shields.io/npm/v/node-swish.svg)](https://www.npmjs.com/package/node-swish) [![npm](https://img.shields.io/npm/dm/node-swish.svg)](https://www.npmjs.com/package/node-swish)
+* License: [![GitHub](https://img.shields.io/github/license/adonisv79/node-swish.svg)](https://github.com/adonisv79/node-swish/blob/master/LICENSE)
+* CICD: [![Codacy Badge](https://api.codacy.com/project/badge/Grade/3709f3ab3b0c4380b5a41e010e8628c0)](https://www.codacy.com/app/adonisv79/node-swish?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=adonisv79/node-swish&amp;utm_campaign=Badge_Grade) [![Known Vulnerabilities](https://snyk.io/test/github/adonisv79/node-swish/badge.svg)](https://snyk.io/test/github/adonisv79/node-swish)
+  * develop: [![Build Status](https://travis-ci.org/adonisv79/node-swish.svg?branch=develop)](https://travis-ci.org/adonisv79/node-swish) [![Coverage Status](https://coveralls.io/repos/github/adonisv79/node-swish/badge.svg?branch=develop)](https://coveralls.io/github/adonisv79/node-swish?branch=develop)
+  * master: [![Build Status](https://travis-ci.org/adonisv79/node-swish.svg?branch=master)](https://travis-ci.org/adonisv79/node-swish) [![Coverage Status](https://coveralls.io/repos/github/adonisv79/node-swish/badge.svg)](https://coveralls.io/github/adonisv79/node-swish)
 
 ## How it works
 The API Handshake is basically a Hybrid Encryption system (https://en.wikipedia.org/wiki/Hybrid_cryptosystem) which is built for managing short to medium term Client-Server sessions. This is useful for ensuring that whenever a client needs to connect to an API, the transmitted communication on the network is encrypted e2e (End-to-End). On top of that, when that session is destroyed, the transmitted data are as good as gone! To continue communicating, the client needs to perform a new handshake. As of v1.1.0, we have added a double ratchet mechanism to even complicate things. v1.2.0 improvements focusing on strict typing inference where we have adapted the base code to TypeScript :p
 
-For more details on this project, please see the project wiki at https://github.com/adonisv79/adon-api-handshake/wiki
+For more details on this project, please see the project wiki at https://github.com/adonisv79/node-swish/wiki
 
 ## Installation
-The module is released and available in NPMJS (https://www.npmjs.com/package/adon-api-handshake) 
+The module is released and available in NPMJS (https://www.npmjs.com/package/swish) 
 ```
-npm install adon-api-handshake --save
+npm install swish --save
 ```
 
 Full guide is in the Wiki
 
 ## History
+### renamed project to SWISH (as of 1.2.5)
+I just had to rename it as the long name is not that awesome. SWISH stands for "Secured Web Iterating Session Handshake" which pretty much describes what it does. all headers are renamed as such as well.
+
 ### Migration to TypeScript and CICD (added in 1.2.3)
 We have started unit testing and boy it is a mess as we need to validate through several possible ways anyone will mess your code thru invalid parameter injection. We need a standardized way to strict type it and no one comes close to TypeScript such that most projects are moving towards it. Modified the unit tests and code coverage as well to allow for Typescript support. We have also utilized popular open-source quality and CI tools like Codacy, Jest and Travis
 

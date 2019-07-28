@@ -10,25 +10,25 @@ const app = express();
 app.use(bodyParser.json());
 
 // now lets make use of the handshake library
-import { HandshakeServer, SwhsHeaders } from "../src/index";
+import { HandshakeServer, SwishHeaders } from "../src/index";
 const serverHS = new HandshakeServer();
 
-function getSwhsFromReqHeaders(reqHeaders: IncomingHttpHeaders): SwhsHeaders {
-	const headers: SwhsHeaders = { swhs_action: "", swhs_iv: "", swhs_key: "", swhs_next: "", swhs_sess_id: ""};
-	if (typeof reqHeaders.swhs_action === "string") {
-		headers.swhs_action = reqHeaders.swhs_action;
+function getSwishFromReqHeaders(reqHeaders: IncomingHttpHeaders): SwishHeaders {
+	const headers: SwishHeaders = { swish_action: "", swish_iv: "", swish_key: "", swish_next: "", swish_sess_id: ""};
+	if (typeof reqHeaders.swish_action === "string") {
+		headers.swish_action = reqHeaders.swish_action;
 	}
-	if (typeof reqHeaders.swhs_iv === "string") {
-		headers.swhs_iv = reqHeaders.swhs_iv;
+	if (typeof reqHeaders.swish_iv === "string") {
+		headers.swish_iv = reqHeaders.swish_iv;
 	}
-	if (typeof reqHeaders.swhs_key === "string") {
-		headers.swhs_key = reqHeaders.swhs_key;
+	if (typeof reqHeaders.swish_key === "string") {
+		headers.swish_key = reqHeaders.swish_key;
 	}
-	if (typeof reqHeaders.swhs_next === "string") {
-		headers.swhs_next = reqHeaders.swhs_next;
+	if (typeof reqHeaders.swish_next === "string") {
+		headers.swish_next = reqHeaders.swish_next;
 	}
-	if (typeof reqHeaders.swhs_sess_id === "string") {
-		headers.swhs_sess_id = reqHeaders.swhs_sess_id;
+	if (typeof reqHeaders.swish_sess_id === "string") {
+		headers.swish_sess_id = reqHeaders.swish_sess_id;
 	}
 	console.dir(headers);
 	return headers;
@@ -39,14 +39,14 @@ app.post("/auth/handshake", (req, res) => {
 	try {
 		console.log("################################################################################");
 		console.log("***HANDSHAKE:REQUEST_ACCEPTED***");
-		const headers = getSwhsFromReqHeaders(req.headers);
+		const headers = getSwishFromReqHeaders(req.headers);
 		// generate a unique session id using a session manager
-		headers.swhs_sess_id = (session.createSession({}) as string);
-		console.log(`Session:  ${headers.swhs_sess_id}`);
+		headers.swish_sess_id = (session.createSession({}) as string);
+		console.log(`Session:  ${headers.swish_sess_id}`);
 		const result = serverHS.handleHandshakeRequest(headers);
 
 		// store the next request decryption items in the session
-		session.find(headers.swhs_sess_id).decrypt = result.decrypt;
+		session.find(headers.swish_sess_id).decrypt = result.decrypt;
 
 		console.log("***HANDSHAKE:RESPONDING***");
 		console.dir(result.body);
@@ -62,15 +62,15 @@ app.post("/auth/handshake", (req, res) => {
 app.post("/test", (req , res) => {
 	try {
 		// retrieve the private key and passphrase for the session and decryptRequest
-		if (typeof req.headers.swhs_sess_id === "string" &&
-			!session.find(req.headers.swhs_sess_id)) {
+		if (typeof req.headers.swish_sess_id === "string" &&
+			!session.find(req.headers.swish_sess_id)) {
 			res.status(403).send("Invalid Session");
 		}
 
-		const privateKey = session.find(req.headers.swhs_sess_id).decrypt.next_prv;
-		const passphrase = session.find(req.headers.swhs_sess_id).decrypt.created_date;
+		const privateKey = session.find(req.headers.swish_sess_id).decrypt.next_prv;
+		const passphrase = session.find(req.headers.swish_sess_id).decrypt.created_date;
 		// get the decrypted request
-		const headers = getSwhsFromReqHeaders(req.headers);
+		const headers = getSwishFromReqHeaders(req.headers);
 		const decReq = serverHS.decryptRequest(headers, req.body, privateKey, passphrase);
 
 		console.log("***RECEIVED_REQUEST***");
@@ -84,9 +84,9 @@ app.post("/test", (req , res) => {
 			resBody = { secret_response: "Unknown action, should be hello or move" };
 		}
 		// encrypt the response body before sending
-		response = serverHS.encryptResponse(req.headers.swhs_sess_id as string, resBody, decReq.next_pub);
+		response = serverHS.encryptResponse(req.headers.swish_sess_id as string, resBody, decReq.next_pub);
 		// store the next request decryption items in the session
-		session.find(req.headers.swhs_sess_id).decrypt = response.decrypt;
+		session.find(req.headers.swish_sess_id).decrypt = response.decrypt;
 
 		console.log("***RESPONDED***");
 		console.dir(response.body);

@@ -1,137 +1,132 @@
-import { BinaryLike } from "crypto";
+import { BinaryLike } from 'crypto';
 
-import { HybridCryptography, SwishBody, SwishHeaders } from "./HybridCryptography";
+import { HybridCryptography, SwishBody, SwishHeaders } from './HybridCryptography';
 
 export class HandshakeClient extends HybridCryptography {
-	private strSessionId!: string;
-	private objKeys: {
-		next_pub: Buffer | string;
-		next_prv: Buffer | string;
-		created_date: number;
-	};
+  private strSessionId!: string;
 
-	/**
-	 * Gets the current client session id
-	 */
-	public get SessionId(): string {
-		return this.strSessionId;
-	}
+  private objKeys: {
+    nextPublic: string;
+    nextPrivate: string;
+    createdDate: number;
+  };
 
-	constructor() {
-		super();
-		// set the default
-		this.objKeys = { next_pub: "", next_prv: "", created_date: -1 };
-		this.strSessionId = "";
-	}
+  /**
+   * Gets the current client session id
+   */
+  public get SessionId(): string {
+    return this.strSessionId;
+  }
 
-	/**
-	 * Validates the headers with added keys expected from a server response
-	 */
-	public validateResponseSwishHeader(headers: SwishHeaders): void {
-		if (!headers.swish_sess_id) {
-			throw new Error("HANDSHAKE_INVALID: Missing header swish_sess_id");
-		} else if (this.strSessionId && this.strSessionId !== headers.swish_sess_id) {
-			throw new Error("HANDSHAKE_INVALID: Session ID mismatch");
-		}
-	}
+  constructor() {
+    super();
+    // set the default
+    this.objKeys = { nextPublic: '', nextPrivate: '', createdDate: -1 };
+    this.strSessionId = '';
+  }
 
-	/**
-	 * Generates a new handshake request and retrieve the next generated SWISH header values
-	 */
-	public generateHandshake(): { headers: SwishHeaders; body: SwishBody} {
-		// create a new RSA key pair
-		const date = new Date();
-		const rsa = this.createRSAEncrytptionKey(date.getTime().toString());
-		this.strSessionId = "";
-		this.objKeys = {
-			created_date: date.getTime(),
-			next_prv: rsa.private_key,
-			next_pub: rsa.public_key,
-		};
+  /**
+   * Validates the headers with added keys expected from a server response
+   */
+  public validateResponseSwishHeader(headers: SwishHeaders): void {
+    if (!headers.swishSessionId) {
+      throw new Error('HANDSHAKE_INVALID: Missing from header Swish Session Id');
+    } else if (this.strSessionId && this.strSessionId !== headers.swishSessionId) {
+      throw new Error('HANDSHAKE_INVALID: Session ID mismatch');
+    }
+  }
 
-		// create a new aes set to encrypt the "response public key"
-		const aesSet = this.createAESEncryptionKey();
-		const encNextPub = this.aesEncrypt(
-			this.objKeys.next_pub,
-			aesSet.key,
-			aesSet.iv);
+  /**
+   * Generates a new handshake request and retrieve the next generated SWISH header values
+   */
+  public generateHandshake(): { headers: SwishHeaders; body: SwishBody} {
+    // create a new RSA key pair
+    const date = new Date();
+    const rsa = this.createRSAEncrytptionKeys(date.getTime().toString());
+    this.strSessionId = '';
+    this.objKeys = {
+      createdDate: date.getTime(),
+      nextPrivate: rsa.private,
+      nextPublic: rsa.public,
+    };
 
-		return {
-			body: {
-				is_json: false,
-			},
-			headers: {
-				swish_action: "handshake_init",
-				swish_iv: aesSet.iv.toString("base64"),
-				swish_key: aesSet.key.toString("base64"),
-				swish_next: encNextPub,
-				swish_sess_id: "",
-			},
-		};
-	}
+    // create a new aes set to encrypt the 'response public key'
+    const aes = this.createAESEncryptionKey();
+    const encNextPub = this.aesEncrypt(
+      this.objKeys.nextPublic,
+      aes,
+    );
+    return {
+      body: {
+        isJson: false,
+      },
+      headers: {
+        swishAction: 'handshake_init',
+        swishIV: aes.iv.toString('base64'),
+        swishKey: aes.key.toString('base64'),
+        swishNextPublic: encNextPub,
+        swishSessionId: '',
+      },
+    };
+  }
 
-	/**
-	 * Encrypts a request body and retrieve the next generated SWISH header values
-	 * @param body - the request body to encrypt
-	 */
-	public encryptRequest(body: BinaryLike | object): { headers: SwishHeaders; body: SwishBody } {
-		if (!body) {
-			throw new Error("BODY_INVALID");
-		} else if (!this.objKeys.next_pub) {
-			throw new Error("Next public request key is not set!");
-		}
+  /**
+   * Encrypts a request body and retrieve the next generated SWISH header values
+   * @param body - the request body to encrypt
+   */
+  public encryptRequest(body: BinaryLike | object): { headers: SwishHeaders; body: SwishBody } {
+    if (!body) {
+      throw new Error('BODY_INVALID');
+    } else if (!this.objKeys.nextPublic) {
+      throw new Error('Next public request key is not set!');
+    }
 
-		const result = this.hybridEncrypt(body, this.objKeys.next_pub);
-		this.objKeys.next_prv = result.next_prv;
-		this.objKeys.created_date = result.created_date;
+    const result = this.hybridEncrypt(body, this.objKeys.nextPublic);
+    this.objKeys.nextPrivate = result.nextPrivate;
+    this.objKeys.createdDate = result.createdDate;
 
-		return {
-			body: {
-				enc_body: result.encData,
-				is_json: result.isJson,
-			},
-			headers: {
-				swish_action: "request_basic",
-				swish_iv: result.iv,
-				swish_key: result.key,
-				swish_next: result.nextPub, // this is the next response
-				swish_sess_id: this.strSessionId,
-			},
-		};
-	}
+    return {
+      body: result.body,
+      headers: {
+        swishAction: 'request_basic',
+        swishIV: result.keys.swishIV,
+        swishKey: result.keys.swishKey,
+        swishNextPublic: result.keys.swishNextPublic,
+        swishSessionId: this.strSessionId,
+      },
+    };
+  }
 
-	/**
-	 * Handle the response from the SWISH service and stores the next pub key in the chain
-	 * @param headers - The response headers
-	 * @param body - The response body
-	 */
-	public handleHandshakeResponse(headers: SwishHeaders, body: SwishBody) {
-		// if new session id, assign it
-		if (!this.strSessionId && headers.swish_sess_id) {
-			this.strSessionId = headers.swish_sess_id;
-		}
-		// retrieve the next request sequenced pub key
-		return this.decryptResponse(headers, body);
-	}
+  /**
+   * Handle the response from the SWISH service and stores the next pub key in the chain
+   * @param headers - The response headers
+   * @param body - The response body
+   */
+  public handleHandshakeResponse(headers: SwishHeaders, body: SwishBody) {
+    // if new session id, assign it
+    if (!this.strSessionId && headers.swishSessionId) {
+      this.strSessionId = headers.swishSessionId;
+    }
+    // retrieve the next request sequenced pub key
+    return this.decryptResponse(headers, body);
+  }
 
-	/**
-	 * Decrypt the encrypted response and stores the next pub key in the chain
-	 * @param headers - The response headers
-	 * @param body - The response body
-	 */
-	public decryptResponse(headers: SwishHeaders, body: SwishBody) {
-		this.validateResponseSwishHeader(headers);
-		const decrypted = this.hybridDecrypt(
-			body,
-			headers.swish_next,
-			this.objKeys.next_prv,
-			this.objKeys.created_date.toString(),
-			headers.swish_key,
-			headers.swish_iv);
+  /**
+   * Decrypt the encrypted response and stores the next pub key in the chain
+   * @param headers - The response headers
+   * @param body - The response body
+   */
+  public decryptResponse(headers: SwishHeaders, body: SwishBody) {
+    this.validateResponseSwishHeader(headers);
+    const decrypted = this.hybridDecrypt(
+      body,
+      headers,
+      this.objKeys.nextPrivate,
+      this.objKeys.createdDate.toString(),
+    );
 
-		// set the next request public key in memory and return the body
-		this.objKeys.next_pub = decrypted.nextPub;
-		return decrypted.data;
-	}
-
+    // set the next request public key in memory and return the body
+    this.objKeys.nextPublic = decrypted.nextPub;
+    return decrypted.data;
+  }
 }

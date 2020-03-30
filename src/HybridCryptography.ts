@@ -1,196 +1,188 @@
-import { BinaryLike, default as crypto, generateKeyPairSync } from "crypto";
+import crypto, { BinaryLike, generateKeyPairSync } from 'crypto';
 
-export type Algorithms = "aes-128-cbc";
+const AES_ALGO = 'aes-128-cbc';
+const RSA_MODULUS_LENGTH = 512; // this can be made 1024 but it will be slow and bandwidth heavy
 
-export type RsaSizes = 512 | 1024;
-
-export interface SwishHeaders {
-	swish_action: string;
-	swish_iv: string;
-	swish_key: string;
-	swish_next: string;
-	swish_sess_id: string;
+/**
+* An object containing necessary values used for AES cryptography
+*/
+export interface AESKeySet {
+  key: Buffer;
+  iv: Buffer;
 }
 
-const SwishHeaderRules = {
-	swish_action: {
-		maxlen: 50,
-	},
-};
+export interface SwishKeys {
+  swishIV: string;
+  swishKey: string;
+  swishNextPublic: string;
+}
+
+export interface SwishHeaders extends SwishKeys{
+  swishAction: string;
+  swishSessionId: string;
+}
 
 export interface SwishBody {
-	enc_body?: string;
-	is_json: boolean;
+  encBody?: string;
+  isJson: boolean;
+}
+
+/**
+* An object containing the public and private key values used for RSA cryptography
+*/
+export interface RSAKeySet {
+  private: string;
+  public: string;
+}
+
+
+/**
+* Defines he response object of the hybridEncryption process
+*/
+export interface HybridEncryptResult {
+  createdDate: number;
+  body: SwishBody;
+  keys: SwishKeys;
+  nextPrivate: string;
 }
 
 export class HybridCryptography {
+  /**
+  * Creates an randomized AESKeySet
+  */
+  createAESEncryptionKey(): AESKeySet {
+    const size = 16; // assume 'aes-128-cbc' which is 16byte (16 * 8 = 128bit)
+    // generate the new random key and IV which should be of same size
+    return { key: crypto.randomBytes(size), iv: crypto.randomBytes(size) };
+  }
 
-	/**
-	 * Applies AES Encryption using an AES key and iv and returns the encrypted data (in base64 form)
-	 * @param data The data to encrypt
-	 * @param key The AES Key (should be byte array, but if its a base64 string, it is cast to a byte array)
-	 * @param iv The AES Initialization Vector
-	 * @param algorithm The algorithm to use (optional and defaults to aes-128-cbc)
-	 */
-	protected aesEncrypt(
-		data: BinaryLike ,
-		key: Buffer | string,
-		iv: Buffer | string,
-		algorithm: Algorithms = "aes-128-cbc") {
+  /**
+   * Applies AES Encryption using an AES key and iv and returns the encrypted data (in base64 form)
+   * @param data The data to encrypt
+   * @param aes The AES Key Set which contains the key and initialization vector values
+   */
+  aesEncrypt(
+    data: BinaryLike,
+    aes: AESKeySet,
+  ): string {
+    const cipher = crypto.createCipheriv(AES_ALGO, aes.key, aes.iv);
+    const encData = cipher.update(data);
+    return Buffer.concat([encData, cipher.final()])
+      .toString('base64');
+  }
 
-		if (typeof key === "string") { key = Buffer.from(key, "base64"); }
-		if (typeof iv === "string") { iv = Buffer.from(iv, "base64"); }
-		const cipher = crypto.createCipheriv(algorithm, key, iv);
-		const encData = cipher.update(data);
-		return Buffer.concat([encData, cipher.final()])
-			.toString("base64");
-	}
+  /**
+  * Applies AES Decryption to the base64+AES encrypted data using an AES key and iv
+  * and returns the decrypted data in its original form)
+  * @param encData The encrypted data to unpack
+  * @param isJson Indicates if it was originally a JSON object,
+  *   if true then it will be returned as JSON
+  * @param aes The AES Key Set which contains the key and initialization vector values
+  */
+  aesDecrypt(
+    encData: string,
+    isJson = false,
+    aes: AESKeySet,
+  ): Buffer {
+    const encDataBuff = Buffer.from(encData, 'base64');
+    const decipher = crypto.createDecipheriv(AES_ALGO, aes.key, aes.iv);
+    const decDataBuff = decipher.update(encDataBuff);
+    let decData: Buffer = Buffer.concat([decDataBuff, decipher.final()]);
+    if (isJson) { decData = JSON.parse(decData.toString()) as Buffer; }
+    return decData;
+  }
 
-	/**
-	 * Applies AES Decryption to the base64+AES encrypted data using an AES key and iv
-	 * and returns the decrypted data in its original form)
-	 * @param enc_data The encrypted data to decrypt
-	 * @param is_json Indicates if it was originally a JSON object, if true then it will be returned as JSON
-	 * @param key the AES Key
-	 * @param iv the AES Initialization Vector
-	 * @param algorithm The algorithm to use (optional and defaults to aes-128-cbc)
-	 */
-	protected aesDecrypt(
-		encData: string,
-		isJson: boolean = false,
-		key: Buffer | string,
-		iv: Buffer | string,
-		algorithm: Algorithms = "aes-128-cbc") {
+  /**
+   * Creates a new RSA key pair
+   * @param passphrase - The special passphrase to use the decryption/private key
+   */
+  protected createRSAEncrytptionKeys(passphrase: string): RSAKeySet {
+    const keys = generateKeyPairSync('rsa', {
+      modulusLength: RSA_MODULUS_LENGTH,
+      privateKeyEncoding: {
+        cipher: AES_ALGO,
+        format: 'pem',
+        passphrase: passphrase.toString(),
+        type: 'pkcs8',
+      },
+      publicKeyEncoding: { format: 'pem', type: 'spki' },
+    });
 
-		if (typeof key === "string") { key = Buffer.from(key, "base64"); }
-		if (typeof iv === "string") { iv = Buffer.from(iv, "base64"); }
-		const encDataBuff = Buffer.from(encData, "base64");
-		const decipher = crypto.createDecipheriv(algorithm, key, iv);
-		const decDataBuff = decipher.update(encDataBuff);
-		let decData: string | Buffer = Buffer.concat([decDataBuff, decipher.final()]).toString();
-		if (isJson) { decData = JSON.parse(decData) as Buffer; }
-		return decData;
-	}
+    return {
+      private: keys.privateKey,
+      public: keys.publicKey,
+    };
+  }
 
-	/**
-	 * Creates a new AES Key Set
-	 * @param algorithm - The algorithm to use (optional and defaults to aes-128-cbc)
-	 */
-	protected createAESEncryptionKey(algorithm: Algorithms = "aes-128-cbc") {
+  /**
+   * Encrypts the data with AES and then encrypts the AES keys with RSA
+   * @param data - The data to encrypt. If this is an object, returned 'isJson' will be set to true
+   * @param rsaPub - The RSA public key to be used to encrypt the data
+   */
+  protected hybridEncrypt(
+    data: BinaryLike | object,
+    rsaPub: string,
+  ): HybridEncryptResult {
+    const date = new Date();
+    const body: SwishBody = { encBody: '', isJson: false };
+    let dataString = '';
+    if (typeof data === 'object') { // cast JSON objects to stringified json
+      body.isJson = true;
+      dataString = JSON.stringify(data);
+    }
 
-		let size;
-		switch (algorithm) {
-			case "aes-128-cbc":
-				size = 16; // 16 bytes or 128 bits
-				break;
-			default:
-				throw new Error("Algorithm not supported");
-		}
-		// generate the new random key and IV which should be of same size
-		return { key: crypto.randomBytes(size), iv: crypto.randomBytes(size) };
-	}
+    // lets create the next RSA public key to use (Double Ratchet)
+    const rsaKeys = this.createRSAEncrytptionKeys(date.getTime().toString());
+    // create a new symetric key set
+    const aes = this.createAESEncryptionKey();
+    // encrypt the data and next public key with the AES symetric key
+    body.encBody = this.aesEncrypt(dataString, aes);
+    // now encrypt the aes key+iv with the public key and make each base64
+    const keys: SwishKeys = {
+      swishKey: crypto.publicEncrypt({ key: rsaPub, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, aes.key).toString('base64'),
+      swishIV: crypto.publicEncrypt({ key: rsaPub, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, aes.iv).toString('base64'),
+      swishNextPublic: this.aesEncrypt(rsaKeys.public, aes),
+    };
 
-	/**
-	 * Creates a new RSA key pair
-	 * @param passphrase - The special passphrase to use the decryption/private key
-	 * @param algorithm - The algorithm to use (optional and defaults to aes-128-cbc)
-	 * @param modulusLength - The modulus length to use (optional and defaults to 512)
-	 */
-	protected createRSAEncrytptionKey(
-		passphrase: string,
-		algorithm: Algorithms = "aes-128-cbc",
-		modulusLength: RsaSizes = 512) {
+    return {
+      createdDate: date.getTime(),
+      body,
+      keys,
+      nextPrivate: rsaKeys.private,
+    };
+  }
 
-		const keys = generateKeyPairSync("rsa", {
-			modulusLength,
-			privateKeyEncoding: {
-				cipher: algorithm,
-				format: "pem",
-				passphrase: passphrase.toString(),
-				type: "pkcs8",
-			},
-			publicKeyEncoding: {
-				format: "pem",
-				type: "spki",
-			},
-		});
-		// just so we do not break our naming convention
-		return {
-			private_key: keys.privateKey,
-			public_key: keys.publicKey,
-		};
-	}
+  /**
+   * Hybrid Decrypts the encrypted data
+   * @param body - The payload to decrypt
+   * @param is_json - Indicates if it was originally a JSON object, if true then it will be returned as JSON
+   * @param rsa_next_pub - the encrypted next message encryption key in the chain that we need to decrypt
+   * @param private_key - the RSA private key used to decrypt the enc_data
+   * @param passphrase - the Passphrase used to generate the RSA private key
+   * @param key - the AES Key (should be byte array, but if its a base64 string, it is cast to a byte array)
+   * @param iv - the AES Initialization Vector
+   * @param algorithm - The algorithm to use (optional and defaults to aes-128-cbc)
+   */
+  protected hybridDecrypt(
+    body: SwishBody,
+    keys: SwishKeys,
+    privateKey: Buffer | string,
+    passphrase: string,
+  ) {
+    // decrypt the base64 AES key and IV
+    const key = Buffer.from(keys.swishKey, 'base64');
+    const iv = Buffer.from(keys.swishIV, 'base64');
+    const aes: AESKeySet = {
+      key: crypto.privateDecrypt({ key: privateKey.toString(), passphrase, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, key),
+      iv: crypto.privateDecrypt({ key: privateKey.toString(), passphrase, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, iv),
+    };
+    // now we can retrieve the next public key and current data
+    const nextPub = this.aesDecrypt(keys.swishNextPublic, false, aes).toString();
 
-	/**
-	 * Hybrid Decrypts the encrypted data
-	 * @param enc_data - The encrypted data to decrypt
-	 * @param is_json - Indicates if it was originally a JSON object, if true then it will be returned as JSON
-	 * @param rsa_next_pub - the encrypted next message encryption key in the chain that we need to decrypt
-	 * @param private_key - the RSA private key used to decrypt the enc_data
-	 * @param passphrase - the Passphrase used to generate the RSA private key
-	 * @param key - the AES Key (should be byte array, but if its a base64 string, it is cast to a byte array)
-	 * @param iv - the AES Initialization Vector
-	 * @param algorithm - The algorithm to use (optional and defaults to aes-128-cbc)
-	 */
-	protected hybridDecrypt(
-		body: SwishBody,
-		rsaNextPub: string,
-		privateKey: Buffer | string,
-		passphrase: string,
-		key: Buffer | string,
-		iv: Buffer | string,
-		algorithm: Algorithms = "aes-128-cbc") {
-
-		// decrypt the base64 AES key and IV
-		if (typeof key === "string") { key = Buffer.from(key, "base64"); }
-		key = crypto.privateDecrypt({ key: privateKey, passphrase } , key);
-		if (typeof iv === "string") { iv = Buffer.from(iv, "base64"); }
-		iv = crypto.privateDecrypt({ key: privateKey, passphrase } , iv);
-		const nextPub = this.aesDecrypt(rsaNextPub, false, key, iv);
-
-		let data;
-		if (body.enc_body !== undefined && body.enc_body !== "") {
-			data = this.aesDecrypt((body.enc_body), body.is_json, key, iv);
-		}
-		return { data, nextPub };
-	}
-
-	/**
-	 * HybridEncrypts the data
-	 * @param data - The data to encrypt
-	 * @param rsaPub - The RSA public key to be used to encrypt the data
-	 * @param algorithm - The algorithm to use (optional and defaults to aes-128-cbc)
-	 * @param modulusLength - The modulus length to use (optional and defaults to 512)
-	 */
-	protected hybridEncrypt(
-		data: BinaryLike | object,
-		rsaPub: Buffer | string,
-		modulusLength: RsaSizes = 512,
-		algorithm: Algorithms = "aes-128-cbc") {
-
-		let isJson = false;
-		if (typeof data === "object") { // cast JSON objects to stringified json
-			isJson = true;
-			data = JSON.stringify(data);
-		}
-
-		// lets create the next RSA public key to use (Double Ratchet)
-		const date = new Date();
-		const rsaKeys = this.createRSAEncrytptionKey(date.getTime().toString(), algorithm, modulusLength);
-		// create a new symetric key set
-		const aesSet = this.createAESEncryptionKey(algorithm);
-		// encrypt the data and next public key with the AES symetric key
-		const encData = this.aesEncrypt(data, aesSet.key, aesSet.iv);
-		const nextPub = this.aesEncrypt(rsaKeys.public_key, aesSet.key, aesSet.iv);
-		// now encrypt the aes key+iv with the public key and make each base64
-		const iv = crypto.publicEncrypt(rsaPub, aesSet.iv).toString("base64");
-		const key = crypto.publicEncrypt(rsaPub, aesSet.key).toString("base64");
-
-		return {
-			created_date: date.getTime(),
-			encData,
-			isJson, iv, key, nextPub,
-			next_prv: rsaKeys.private_key,
-		};
-	}
+    let data;
+    if (body.encBody !== undefined && body.encBody !== '') {
+      data = this.aesDecrypt((body.encBody), body.isJson, aes);
+    }
+    return { data, nextPub };
+  }
 }

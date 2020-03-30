@@ -19,9 +19,17 @@ The module is released and available in NPMJS (https://www.npmjs.com/package/swi
 npm install swish-protocol --save
 ```
 
-Full guide is in the Wiki
+## Building source
+Just run 'tsc' and it will build the entire distributable Javascript and description files (*.d.ts) into the 'dist/src' folder. This will also build the dev testing output into 'dist/tools'. Nothe that when this is published ('npm publish .'), only the files in 'dist/src' is included.
 
 ## History
+### Major revamp (2.0.0)
+* Just updated several issues from previous versions and made it much simpler to understand the core concepts of the tool. 
+* fixed crlf inconsistencies
+* Added snyk for dependency validation. 
+* Updated to also use eslint AirBnB with Typescript and removed deprecated tslint. 
+* Most functions have been simplified and thus will break any previous implementation so make sure to always lock your versions.
+
 ### renamed project to swish-protocol (as of 1.2.5)
 I just had to rename it as the long name is not that awesome. SWISH stands for "Secured Web Iterating Session Handshake" which pretty much describes what it does. all headers are renamed as such as well.
 

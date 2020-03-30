@@ -11,6 +11,14 @@ export interface AESKeySet {
   iv: Buffer;
 }
 
+/**
+* An object containing the public and private key values used for RSA cryptography
+*/
+export interface RSAKeySet {
+  private: string;
+  public: string;
+}
+
 export interface SwishKeys {
   swishIV: string;
   swishKey: string;
@@ -23,27 +31,27 @@ export interface SwishHeaders extends SwishKeys{
 }
 
 export interface SwishBody {
-  encBody?: string;
+  encBody: string;
   isJson: boolean;
 }
 
-/**
-* An object containing the public and private key values used for RSA cryptography
-*/
-export interface RSAKeySet {
-  private: string;
-  public: string;
-}
-
 
 /**
-* Defines he response object of the hybridEncryption process
+* Defines the response object of the hybrid encryption process
 */
 export interface HybridEncryptResult {
   createdDate: number;
   body: SwishBody;
   keys: SwishKeys;
   nextPrivate: string;
+}
+
+/**
+* Defines the response object of the hybrid decryption process
+*/
+export interface HybridDecryptResult {
+  data: Buffer;
+  nextPublic: string;
 }
 
 export class HybridCryptography {
@@ -153,36 +161,30 @@ export class HybridCryptography {
   }
 
   /**
-   * Hybrid Decrypts the encrypted data
+   * Decrypts the hybrid encrypted data
    * @param body - The payload to decrypt
-   * @param is_json - Indicates if it was originally a JSON object, if true then it will be returned as JSON
-   * @param rsa_next_pub - the encrypted next message encryption key in the chain that we need to decrypt
-   * @param private_key - the RSA private key used to decrypt the enc_data
+   * @param keys - The SwishKeys that contain information on how to decrypt the data and the next public in the chain
+   * @param privateKey - the next private key for decryption in the chain
    * @param passphrase - the Passphrase used to generate the RSA private key
-   * @param key - the AES Key (should be byte array, but if its a base64 string, it is cast to a byte array)
-   * @param iv - the AES Initialization Vector
-   * @param algorithm - The algorithm to use (optional and defaults to aes-128-cbc)
    */
   protected hybridDecrypt(
     body: SwishBody,
     keys: SwishKeys,
-    privateKey: Buffer | string,
+    privateKey: string,
     passphrase: string,
-  ) {
+  ): HybridDecryptResult {
     // decrypt the base64 AES key and IV
     const key = Buffer.from(keys.swishKey, 'base64');
     const iv = Buffer.from(keys.swishIV, 'base64');
     const aes: AESKeySet = {
-      key: crypto.privateDecrypt({ key: privateKey.toString(), passphrase, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, key),
-      iv: crypto.privateDecrypt({ key: privateKey.toString(), passphrase, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, iv),
+      key: crypto.privateDecrypt({ key: privateKey, passphrase, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, key),
+      iv: crypto.privateDecrypt({ key: privateKey, passphrase, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, iv),
     };
     // now we can retrieve the next public key and current data
-    const nextPub = this.aesDecrypt(keys.swishNextPublic, false, aes).toString();
-
-    let data;
-    if (body.encBody !== undefined && body.encBody !== '') {
-      data = this.aesDecrypt((body.encBody), body.isJson, aes);
-    }
-    return { data, nextPub };
+    const retval: HybridDecryptResult = {
+      data: this.aesDecrypt((body.encBody), body.isJson, aes),
+      nextPublic: this.aesDecrypt(keys.swishNextPublic, false, aes).toString(),
+    };
+    return retval;
   }
 }

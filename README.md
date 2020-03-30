@@ -23,6 +23,10 @@ npm install swish-protocol --save
 Just run 'tsc' and it will build the entire distributable Javascript and description files (*.d.ts) into the 'dist/src' folder. This will also build the dev testing output into 'dist/tools'. Nothe that when this is published ('npm publish .'), only the files in 'dist/src' is included.
 
 ## History
+### Fixed hybrid decryption response (2.0.1)
+* it now uses HybridDecryptResult which returns the decrypted data as buffer and the next public key in the chain.
+* SwishBody's 'enc_body' no longer allows undefined
+
 ### Major revamp (2.0.0)
 * Just updated several issues from previous versions and made it much simpler to understand the core concepts of the tool. 
 * fixed crlf inconsistencies

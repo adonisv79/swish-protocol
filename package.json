@@ -1,6 +1,6 @@
 {
   "name": "swish-protocol",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "An API Authentication mechanism using Hybrid Cryptography in order to monitor and manage sessions with an API",
   "main": "dist/src/index.js",
   "files": [
@@ -9,6 +9,7 @@
   "scripts": {
     "dist:client": "node dist/tools/test-client",
     "dist:server": "node dist/tools/test-server",
+    "snyk": "snyk test",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",

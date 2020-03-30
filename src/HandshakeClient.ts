@@ -58,6 +58,7 @@ export class HandshakeClient extends HybridCryptography {
     );
     return {
       body: {
+        encBody: '',
         isJson: false,
       },
       headers: {
@@ -126,7 +127,7 @@ export class HandshakeClient extends HybridCryptography {
     );
 
     // set the next request public key in memory and return the body
-    this.objKeys.nextPublic = decrypted.nextPub;
+    this.objKeys.nextPublic = decrypted.nextPublic;
     return decrypted.data;
   }
 }

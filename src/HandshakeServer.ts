@@ -54,7 +54,7 @@ export class HandshakeServer extends HybridCryptography {
   public decryptRequest(
     headers: SwishHeaders,
     body: SwishBody,
-    nextPrv: Buffer,
+    nextPrv: string,
     passphrase: string,
   ) {
     const decrypted = this.hybridDecrypt(
@@ -65,8 +65,8 @@ export class HandshakeServer extends HybridCryptography {
     );
 
     return {
-      body: decrypted.data as any,
-      nextPubKey: decrypted.nextPub,
+      body: decrypted.data,
+      nextPubKey: decrypted.nextPublic,
     };
   }
 

@@ -46,7 +46,6 @@ app.post('/auth/handshake', (req, res) => {
     headers.swishSessionId = (session.createSession({}) as string);
     console.log(`Session:  ${headers.swishSessionId}`);
     const result = serverHS.handleHandshakeRequest(headers);
-    
     // store the next request decryption items in the session
     session.find(headers.swishSessionId).decrypt = result.decrypt;
 
@@ -81,7 +80,7 @@ app.post('/test', (req, res) => {
     // get the decrypted request
     const headers = getSwishFromReqHeaders(req.headers);
     console.dir(session.find(req.headers['swish-sess-id']).decrypt);
-    const decReq = serverHS.decryptRequest(headers, req.body, privateKey, passphrase);
+    const decReq = serverHS.decryptRequest(headers, req.body, privateKey, passphrase) as any;
 
     console.log('***RECEIVED_REQUEST***');
     console.dir(decReq);

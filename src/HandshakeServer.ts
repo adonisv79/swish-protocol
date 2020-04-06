@@ -48,7 +48,7 @@ export class HandshakeServer extends HybridCryptography {
    * Decrypt the encrypted request with the session's next request decrypt key
    * @param headers - the request headers
    * @param req_body - the request body
-   * @param next_prv - the RSA private key used to decrypt the req_body
+   * @param nextPrv - the RSA private key used to decrypt the req_body
    * @param passphrase - the Passphrase used to generate the RSA private key
    */
   public decryptRequest(

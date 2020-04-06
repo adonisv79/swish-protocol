@@ -1,4 +1,5 @@
-# node-swish-protocol
+# swish-protocol
+![Redis toolbox banner](https://adonisv79.github.io/swish-protocol/images/banner.png)
 An API Authentication Mechanism in order to monitor and manage sessions between clients and an API.
 
 ## Project stats
@@ -21,6 +22,13 @@ npm install swish-protocol --save
 
 ## Building source
 Just run 'tsc' and it will build the entire distributable Javascript and description files (*.d.ts) into the 'dist/src' folder. This will also build the dev testing output into 'dist/tools'. Nothe that when this is published ('npm publish .'), only the files in 'dist/src' is included.
+
+## Running test server and client
+After building, you can run the scripts in package json to test the server and client communications (files found in 'dist/tools')
+```
+npm run dist:server
+npm run dist:client
+```
 
 ## History
 ### Fixed hybrid decryption response (2.0.1)

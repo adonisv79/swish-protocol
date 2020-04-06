@@ -1,8 +1,15 @@
 import { BinaryLike } from 'crypto';
-
 import { HybridCryptography, SwishBody, SwishHeaders } from './HybridCryptography';
 
-export class HandshakeClient extends HybridCryptography {
+/** Defines an object containing the swish header and body */
+export interface SwishRequestOptions {
+  /** The Swish request header data */
+  headers: SwishHeaders;
+  /** The Swish request body data */
+  body: SwishBody;
+}
+
+export class SwishClient extends HybridCryptography {
   private strSessionId!: string;
 
   private objKeys: {
@@ -39,7 +46,7 @@ export class HandshakeClient extends HybridCryptography {
   /**
    * Generates a new handshake request and retrieve the next generated SWISH header values
    */
-  public generateHandshake(): { headers: SwishHeaders; body: SwishBody} {
+  public generateHandshake(): SwishRequestOptions {
     // create a new RSA key pair
     const date = new Date();
     const rsa = this.createRSAEncrytptionKeys(date.getTime().toString());
@@ -75,7 +82,7 @@ export class HandshakeClient extends HybridCryptography {
    * Encrypts a request body and retrieve the next generated SWISH header values
    * @param body - the request body to encrypt
    */
-  public encryptRequest(body: BinaryLike | object): { headers: SwishHeaders; body: SwishBody } {
+  public encryptRequest(body: BinaryLike | object): SwishRequestOptions {
     if (!body) {
       throw new Error('BODY_INVALID');
     } else if (!this.objKeys.nextPublic) {
@@ -100,28 +107,26 @@ export class HandshakeClient extends HybridCryptography {
 
   /**
    * Handle the response from the SWISH service and stores the next pub key in the chain
-   * @param headers - The response headers
-   * @param body - The response body
+   * @param options - The swish object containing the swish headers and body
    */
-  public handleHandshakeResponse(headers: SwishHeaders, body: SwishBody) {
+  public handleHandshakeResponse(options: SwishRequestOptions): Buffer {
     // if new session id, assign it
-    if (!this.strSessionId && headers.swishSessionId) {
-      this.strSessionId = headers.swishSessionId;
+    if (!this.strSessionId && options.headers.swishSessionId) {
+      this.strSessionId = options.headers.swishSessionId;
     }
     // retrieve the next request sequenced pub key
-    return this.decryptResponse(headers, body);
+    return this.decryptResponse(options);
   }
 
   /**
    * Decrypt the encrypted response and stores the next pub key in the chain
-   * @param headers - The response headers
-   * @param body - The response body
+   * @param options - The swish object containing the swish headers and body
    */
-  public decryptResponse(headers: SwishHeaders, body: SwishBody) {
-    this.validateResponseSwishHeader(headers);
+  public decryptResponse(options: SwishRequestOptions): Buffer {
+    this.validateResponseSwishHeader(options.headers);
     const decrypted = this.hybridDecrypt(
-      body,
-      headers,
+      options.body,
+      options.headers,
       this.objKeys.nextPrivate,
       this.objKeys.createdDate.toString(),
     );

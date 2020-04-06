@@ -1,5 +1,5 @@
 # swish-protocol
-![Redis toolbox banner](https://adonisv79.github.io/swish-protocol/images/banner.png)
+![swish protocol banner](https://adonisv79.github.io/swish-protocol/images/banner.png)
 An API Authentication Mechanism in order to monitor and manage sessions between clients and an API.
 
 ## Project stats

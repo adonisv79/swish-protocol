@@ -1,7 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import { IncomingHttpHeaders } from 'http';
-import { HandshakeServer, SwishHeaders } from '../src/index';
+import { SwishServer, SwishHeaders } from '../src/index';
 // lets start with a basic session handler.
 const { SessionManagerBasic } = require('adon-api-session');
 
@@ -11,7 +11,7 @@ const port = 3000;
 const app = express();
 app.use(bodyParser.json());
 
-const serverHS = new HandshakeServer();
+const serverHS = new SwishServer();
 
 function getSwishFromReqHeaders(reqHeaders: IncomingHttpHeaders): SwishHeaders {
   const headers: SwishHeaders = {

@@ -12,7 +12,7 @@ export interface SwishDecryption {
   createdDate: number;
 }
 
-export class HandshakeServer extends HybridCryptography {
+export class SwishServer extends HybridCryptography {
   /**
    * Handles a handshake request from a new client
    * @param headers - the request headers

@@ -1,10 +1,10 @@
 import { BinaryLike } from 'crypto';
 import rp from 'request-promise';
 import { Response } from 'request';
-import { HandshakeClient, SwishHeaders } from '../src/index';
+import { SwishClient, SwishHeaders } from '../src/index';
 
 const SERVER_URL = 'http://localhost:3000';
-const clientHS = new HandshakeClient();
+const clientHS = new SwishClient();
 
 async function testHandShake() {
   console.log('################################################################################');
@@ -33,7 +33,9 @@ async function testHandShake() {
       swishNextPublic: (response.headers['swish-next'] || '').toString(),
       swishSessionId: (response.headers['swish-sess-id'] || '').toString(),
     };
-    const dec: any = clientHS.handleHandshakeResponse(swishheaders, response.body);
+    const dec: any = clientHS.handleHandshakeResponse({
+      headers: swishheaders, body: response.body,
+    });
     console.dir(dec);
     return dec;
   }).catch((err: Error) => {
@@ -70,7 +72,9 @@ async function testRequest(body: BinaryLike | object) {
     console.log('********************************************************************');
     console.log(response.headers);
     console.log('********************************************************************');
-    const dec: any = clientHS.decryptResponse(swishheaders, response.body);
+    const dec: any = clientHS.decryptResponse({
+      headers: swishheaders, body: response.body,
+    });
     console.log('***RECEIVED_RESPONSE***');
     console.dir(dec);
     console.log('********************************************************************');

@@ -60,7 +60,7 @@ async function testRequest(body: BinaryLike | object) {
     json: true,
     method: 'POST',
     resolveWithFullResponse: true,
-    uri: `${SERVER_URL}/test`,
+    uri: `${SERVER_URL}/test/success`,
   }).then((response: Response) => {
     const swishheaders: SwishHeaders = {
       swishAction: (response.headers['swish-action'] || '').toString(),

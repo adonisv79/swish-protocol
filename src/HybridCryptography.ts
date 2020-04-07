@@ -3,38 +3,55 @@ import crypto, { BinaryLike, generateKeyPairSync } from 'crypto';
 const AES_ALGO = 'aes-128-cbc';
 const RSA_MODULUS_LENGTH = 512; // this can be made 1024 but it will be slow and bandwidth heavy
 
-/**
-* An object containing necessary values used for AES cryptography
-*/
+/** An object containing necessary values used for AES cryptography */
 export interface AESKeySet {
+  /** The AES Key */
   key: Buffer;
+  /** The AES Initialization Vector */
   iv: Buffer;
 }
 
-/**
-* An object containing the public and private key values used for RSA cryptography
-*/
+/** An object containing the public and private key values used for RSA cryptography */
 export interface RSAKeySet {
+  /** The private key held only by the client or server */
   private: string;
+  /** The public key which is freely passed between client and server */
   public: string;
 }
 
+/** Defines the basic keys found on the SwishHeader */
 export interface SwishKeys {
+  /** The AES Initialization Vector */
   swishIV: string;
+  /** The AES Key */
   swishKey: string;
+  /** The next public key to be used in the transaction chain */
   swishNextPublic: string;
 }
 
+/** Defines a complete header object and all its required members */
 export interface SwishHeaders extends SwishKeys{
+  /** The swish action to implement */
   swishAction: string;
+  /** The unique user session identifier */
   swishSessionId: string;
 }
 
+/** The encrypted message and its metadata */
 export interface SwishBody {
+  /** The encrypted data in Base64 string format */
   encBody: string;
+  /** Defines if the encrypted data is a JSON and should be parsed back to an object automaticaly */
   isJson: boolean;
 }
 
+/** Defines an ancapsulated object containing the swish header and body */
+export interface SwishPackage {
+  /** The Swish request header data */
+  headers: SwishHeaders;
+  /** The Swish request body data */
+  body: SwishBody;
+}
 
 /**
 * Defines the response object of the hybrid encryption process

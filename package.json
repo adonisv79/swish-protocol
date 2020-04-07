@@ -1,6 +1,6 @@
 {
   "name": "swish-protocol",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "An API Authentication mechanism using Hybrid Cryptography in order to monitor and manage sessions with an API",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",

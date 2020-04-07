@@ -18,7 +18,7 @@ export class SwishServer extends HybridCryptography {
    * @param headers - the request headers
    * @param sessionId - the unique session identifier
    */
-  public handleHandshakeRequest(headers: SwishHeaders) {
+  public handleHandshakeRequest(headers: SwishHeaders): { headers: SwishHeaders; body: SwishBody; decrypt: SwishDecryption } {
     if (headers.swishSessionId === '') {
       throw new Error('SESSION_ID_INVALID');
     } else if (headers.swishAction !== 'handshake_init') {
@@ -56,7 +56,7 @@ export class SwishServer extends HybridCryptography {
     body: SwishBody,
     nextPrv: string,
     passphrase: string,
-  ) {
+  ): { body: Buffer; nextPubKey: string } {
     const decrypted = this.hybridDecrypt(
       body,
       headers,

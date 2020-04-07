@@ -66,7 +66,7 @@ app.post('/auth/handshake', (req, res) => {
 });
 
 // create a test endpoint to see if data are transferred securely
-app.post('/test', (req, res) => {
+app.post('/test/success', (req, res) => {
   try {
     console.log('################################################################################');
     console.log('***TEST:REQUEST_ACCEPTED***');

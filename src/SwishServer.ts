@@ -7,6 +7,7 @@ import {
   AESKeySet,
 } from './HybridCryptography';
 
+/** The Decryption private key response */
 export interface SwishDecryption {
   nextPrivate: string;
   createdDate: number;
@@ -15,8 +16,7 @@ export interface SwishDecryption {
 export class SwishServer extends HybridCryptography {
   /**
    * Handles a handshake request from a new client
-   * @param headers - the request headers
-   * @param sessionId - the unique session identifier
+   * @param headers - The request headers
    */
   public handleHandshakeRequest(headers: SwishHeaders): { headers: SwishHeaders; body: SwishBody; decrypt: SwishDecryption } {
     if (headers.swishSessionId === '') {
@@ -46,21 +46,21 @@ export class SwishServer extends HybridCryptography {
 
   /**
    * Decrypt the encrypted request with the session's next request decrypt key
-   * @param headers - the request headers
-   * @param req_body - the request body
-   * @param nextPrv - the RSA private key used to decrypt the req_body
-   * @param passphrase - the Passphrase used to generate the RSA private key
+   * @param headers - The request headers
+   * @param body - The request body
+   * @param nextPrivate - The next RSA private key used to decrypt the body
+   * @param passphrase - The Passphrase used to generate the RSA private key
    */
   public decryptRequest(
     headers: SwishHeaders,
     body: SwishBody,
-    nextPrv: string,
+    nextPrivate: string,
     passphrase: string,
   ): { body: Buffer; nextPubKey: string } {
     const decrypted = this.hybridDecrypt(
       body,
       headers,
-      nextPrv,
+      nextPrivate,
       passphrase,
     );
 
@@ -72,22 +72,23 @@ export class SwishServer extends HybridCryptography {
 
   /**
    * Encrypt the response with the session public key
-   * @param swishSessionId - the unique session identifier
-   * @param body - the response body to encrypt
+   * @param swishSessionId - The unique session identifier
+   * @param body - The response body to encrypt
+   * @param nextPublic - The next RSA Public key in the chain to encrypt the body
    */
   public encryptResponse(
     swishSessionId: string,
     body: BinaryLike | object,
-    rsaPub: string,
+    nextPublic: string,
   ): { headers: SwishHeaders; body: SwishBody; decrypt: SwishDecryption } {
-    if (!rsaPub) {
+    if (!nextPublic) {
       throw new Error('PUBLIC_KEY_INVALID');
     } else if (!body) {
       throw new Error('BODY_INVALID');
     }
 
     // use Hybrid Encryption and return the response in the proper structure
-    const result = this.hybridEncrypt(body, rsaPub);
+    const result = this.hybridEncrypt(body, nextPublic);
     return {
       body: result.body,
       decrypt: {

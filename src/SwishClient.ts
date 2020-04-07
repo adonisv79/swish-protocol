@@ -27,7 +27,7 @@ export class SwishClient extends HybridCryptography {
   /**
    * Validates the headers with added keys expected from a server response
    */
-  public validateResponseSwishHeader(headers: SwishHeaders): void {
+  private validateResponseSwishHeader(headers: SwishHeaders): void {
     if (!headers.swishSessionId) {
       throw new Error('HANDSHAKE_INVALID: Missing from header Swish Session Id');
     } else if (this.strSessionId && this.strSessionId !== headers.swishSessionId) {
@@ -72,7 +72,7 @@ export class SwishClient extends HybridCryptography {
 
   /**
    * Encrypts a request body and retrieve the next generated SWISH header values
-   * @param body - the request body to encrypt
+   * @param body - The request body to encrypt
    */
   public encryptRequest(body: BinaryLike | object): SwishPackage {
     if (!body) {

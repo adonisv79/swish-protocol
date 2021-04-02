@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { BinaryLike } from 'crypto';
 import axios, { AxiosResponse } from 'axios';
 import { SwishClient, SwishHeaders } from '../src/index';
@@ -5,7 +6,7 @@ import { SwishClient, SwishHeaders } from '../src/index';
 const SERVER_URL = 'http://localhost:3000';
 const clientHS = new SwishClient();
 
-async function testHandShake(): Promise<any> {
+async function testHandShake(): Promise< Buffer| Record<string, unknown>> {
   console.log('################################################################################');
   const swish = clientHS.generateHandshake();
   console.log('***HANDSHAKE:INITIATING***');
@@ -31,17 +32,15 @@ async function testHandShake(): Promise<any> {
       swishNextPublic: (response.headers['swish-next'] || '').toString(),
       swishSessionId: (response.headers['swish-sess-id'] || '').toString(),
     };
-    const dec: any = clientHS.handleHandshakeResponse({
+    const dec: Buffer | Record<string, unknown> = clientHS.handleHandshakeResponse({
       headers: swishheaders, body: response.data,
     });
     console.dir(dec);
     return dec;
-  }).catch((err: Error) => {
-    console.error(err.message);
   });
 }
 
-async function testRequest(body: BinaryLike | object): Promise<void> {
+async function testRequest(body: BinaryLike | Record<string, unknown>): Promise<void> {
   console.log('***SENDING***');
   console.dir(body);
   const swish = clientHS.encryptRequest(body);
@@ -69,7 +68,7 @@ async function testRequest(body: BinaryLike | object): Promise<void> {
     console.log('********************************************************************');
     console.log(response.headers);
     console.log('********************************************************************');
-    const dec: any = clientHS.decryptResponse({
+    const dec = clientHS.decryptResponse({
       headers: swishheaders, body: response.data,
     });
     console.log('***RECEIVED_RESPONSE***');
@@ -81,10 +80,9 @@ async function testRequest(body: BinaryLike | object): Promise<void> {
   });
 }
 
-async function test() {
+async function test(): Promise<void> {
   try {
-    const handshakeResponse = await testHandShake();
-
+    const handshakeResponse = (await testHandShake()) as Record<string, unknown>;
     if (handshakeResponse.status === 'ok') {
       console.log('[SUCCESS]HANDSHAKE_PAIRED');
     } else {

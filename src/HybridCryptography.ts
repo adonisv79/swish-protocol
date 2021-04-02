@@ -153,7 +153,7 @@ export class HybridCryptography {
    * @param rsaPub - The RSA public key to be used to encrypt the data
    */
   hybridEncrypt(
-    data: BinaryLike | object,
+    data: BinaryLike | Record<string, unknown>,
     rsaPub: string,
   ): HybridEncryptResult {
     const date = new Date();

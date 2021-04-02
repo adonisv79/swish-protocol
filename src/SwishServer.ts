@@ -13,7 +13,7 @@ export interface SwishDecryption {
 }
 
 export interface DecryptedRequest {
-  body: Buffer;
+  body: Buffer | Record<string, unknown>;
   nextPubKey: string;
 }
 
@@ -103,7 +103,7 @@ export class SwishServer extends HybridCryptography {
    */
   public encryptResponse(
     swishSessionId: string,
-    body: BinaryLike | object,
+    body: BinaryLike | Record<string, unknown>,
     nextPublic: string,
   ): EncryptedResponse {
     if (!nextPublic) {

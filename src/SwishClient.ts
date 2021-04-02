@@ -80,7 +80,7 @@ export class SwishClient extends HybridCryptography {
    * Encrypts a request body and retrieve the next generated SWISH header values
    * @param body - The request body to encrypt
    */
-  public encryptRequest(body: BinaryLike | object): SwishPackage {
+  public encryptRequest(body: BinaryLike | Record<string, unknown>): SwishPackage {
     if (!body) {
       throw new Error('HYBRIDCRYPTO_REQUEST_BODY_INVALID');
     } else if (!this.objKeys.nextPublic) {
@@ -107,7 +107,7 @@ export class SwishClient extends HybridCryptography {
    * Handle the response from the SWISH service and stores the next pub key in the chain
    * @param options - The swish object containing the swish headers and body
    */
-  public handleHandshakeResponse(options: SwishPackage): Buffer {
+  public handleHandshakeResponse(options: SwishPackage): Buffer | Record<string, unknown> {
     // if new session id, assign it
     if (options.headers.swishSessionId && this.strSessionId !== options.headers.swishSessionId) {
       this.strSessionId = options.headers.swishSessionId;
@@ -120,7 +120,7 @@ export class SwishClient extends HybridCryptography {
    * Decrypt the encrypted response and stores the next pub key in the chain
    * @param options - The swish object containing the swish headers and body
    */
-  public decryptResponse(options: SwishPackage): Buffer {
+  public decryptResponse(options: SwishPackage): Buffer | Record<string, unknown> {
     this.validateResponseSwishHeader(options.headers);
     const decrypted = this.hybridDecrypt(
       options.body,

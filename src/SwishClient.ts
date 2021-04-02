@@ -29,9 +29,15 @@ export class SwishClient extends HybridCryptography {
    */
   private validateResponseSwishHeader(headers: SwishHeaders): void {
     if (!headers.swishSessionId) {
-      throw new Error('HANDSHAKE_INVALID: Missing from header Swish Session Id');
-    } else if (this.strSessionId && this.strSessionId !== headers.swishSessionId) {
-      throw new Error('HANDSHAKE_INVALID: Session ID mismatch');
+      throw new Error('HANDSHAKE_RESPONSE_SESSID_INVALID');
+    } else if (!headers.swishAction) {
+      throw new Error('HANDSHAKE_RESPONSE_ACTION_INVALID');
+    } else if (!headers.swishKey) {
+      throw new Error('HANDSHAKE_RESPONSE_AESKEY_INVALID');
+    } else if (!headers.swishIV) {
+      throw new Error('HANDSHAKE_RESPONSE_AESIV_INVALID');
+    } else if (!headers.swishNextPublic) {
+      throw new Error('HANDSHAKE_RESPONSE_NEXTPUBKEY_INVALID');
     }
   }
 
@@ -45,8 +51,8 @@ export class SwishClient extends HybridCryptography {
     this.strSessionId = '';
     this.objKeys = {
       createdDate: date.getTime(),
-      nextPrivate: rsa.private,
-      nextPublic: rsa.public,
+      nextPrivate: rsa.pvtKey,
+      nextPublic: rsa.pubKey,
     };
 
     // create a new aes set to encrypt the 'response public key'
@@ -76,9 +82,9 @@ export class SwishClient extends HybridCryptography {
    */
   public encryptRequest(body: BinaryLike | object): SwishPackage {
     if (!body) {
-      throw new Error('BODY_INVALID');
+      throw new Error('HYBRIDCRYPTO_REQUEST_BODY_INVALID');
     } else if (!this.objKeys.nextPublic) {
-      throw new Error('Next public request key is not set!');
+      throw new Error('HYBRIDCRYPTO_CLIENT_NEXTPUB_NOT_SET');
     }
 
     const result = this.hybridEncrypt(body, this.objKeys.nextPublic);
@@ -103,7 +109,7 @@ export class SwishClient extends HybridCryptography {
    */
   public handleHandshakeResponse(options: SwishPackage): Buffer {
     // if new session id, assign it
-    if (!this.strSessionId && options.headers.swishSessionId) {
+    if (options.headers.swishSessionId && this.strSessionId !== options.headers.swishSessionId) {
       this.strSessionId = options.headers.swishSessionId;
     }
     // retrieve the next request sequenced pub key

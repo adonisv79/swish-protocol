@@ -4,7 +4,6 @@ import {
   HybridCryptography,
   SwishBody,
   SwishHeaders,
-  AESKeySet,
 } from './HybridCryptography';
 
 /** The Decryption private key response */
@@ -13,29 +12,55 @@ export interface SwishDecryption {
   createdDate: number;
 }
 
+export interface DecryptedRequest { 
+  body: Buffer;
+  nextPubKey: string;
+}
+
+export interface EncryptedResponse { 
+  headers: SwishHeaders;
+  body: SwishBody;
+  decrypt: SwishDecryption;
+}
+
 export class SwishServer extends HybridCryptography {
   /**
    * Handles a handshake request from a new client
    * @param headers - The request headers
    */
-  public handleHandshakeRequest(headers: SwishHeaders): { headers: SwishHeaders; body: SwishBody; decrypt: SwishDecryption } {
+  public handleHandshakeRequest(headers: SwishHeaders): EncryptedResponse {
+    let iv: Buffer
+    let key: Buffer
+
     if (headers.swishSessionId === '') {
       throw new Error('SESSION_ID_INVALID');
     } else if (headers.swishAction !== 'handshake_init') {
       throw new Error('HANDSHAKE_INVALID_INIT');
-    } else if (headers.swishIV.length < 10) {
+    }
+
+    try {
+      if (headers.swishKey.length < 5) throw new Error();
+      key = Buffer.from(headers.swishKey, 'base64')
+    } catch (err) {
+      throw new Error('HANDSHAKE_KEY_INVALID');
+    }
+
+    try {
+      if (headers.swishIV.length < 10) throw new Error();
+      iv = Buffer.from(headers.swishIV, 'base64')
+    } catch (err) {
       throw new Error('HANDSHAKE_AES_IV_INVALID');
     }
 
-    const aes: AESKeySet = {
-      key: Buffer.from(headers.swishKey, 'base64'),
-      iv: Buffer.from(headers.swishIV, 'base64'),
-    };
-
+    let responsePubKey: string;
     // first lets decrypt that public key for sending our responses to this client
-    const responsePubKey = this.aesDecrypt(
-      headers.swishNextPublic, false, aes,
-    ).toString();
+    try {
+      responsePubKey = this.aesDecrypt(
+        headers.swishNextPublic, false, { key, iv },
+      ).toString();
+    } catch (err) {
+      throw new Error('HANDSHAKE_NEXTPUBKEY_DECRYPT_FAILED');
+    }
 
     // encrypt an ok response using the client's response public key
     const result = this.encryptResponse(headers.swishSessionId, { status: 'ok' }, responsePubKey);
@@ -56,7 +81,7 @@ export class SwishServer extends HybridCryptography {
     body: SwishBody,
     nextPrivate: string,
     passphrase: string,
-  ): { body: Buffer; nextPubKey: string } {
+  ): DecryptedRequest {
     const decrypted = this.hybridDecrypt(
       body,
       headers,
@@ -80,7 +105,7 @@ export class SwishServer extends HybridCryptography {
     swishSessionId: string,
     body: BinaryLike | object,
     nextPublic: string,
-  ): { headers: SwishHeaders; body: SwishBody; decrypt: SwishDecryption } {
+  ): EncryptedResponse {
     if (!nextPublic) {
       throw new Error('PUBLIC_KEY_INVALID');
     } else if (!body) {

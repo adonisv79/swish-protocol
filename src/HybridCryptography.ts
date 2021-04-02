@@ -96,7 +96,7 @@ export class HybridCryptography {
       return Buffer.concat([encData, cipher.final()])
         .toString('base64');
     } catch {
-      throw new Error('HYBRIDCRYPTO_AES_ENCRYPTION_FAILED')
+      throw new Error('HYBRIDCRYPTO_AES_ENCRYPTION_FAILED');
     }
   }
 
@@ -121,7 +121,7 @@ export class HybridCryptography {
       if (isJson) { decData = JSON.parse(decData.toString()) as Buffer; }
       return decData;
     } catch {
-      throw new Error('HYBRIDCRYPTO_AES_DECRYPTION_FAILED')
+      throw new Error('HYBRIDCRYPTO_AES_DECRYPTION_FAILED');
     }
   }
 
@@ -199,10 +199,10 @@ export class HybridCryptography {
     passphrase: string,
   ): HybridDecryptResult {
     // decrypt the base64 AES key and IV
-    if (!body || !body.encBody) { throw new Error('HYBRIDCRYPT_ARGS_BODY_INVALID') }
-    if (!keys || !keys.swishIV || !keys.swishKey || !keys.swishNextPublic) { throw new Error('HYBRIDCRYPT_ARGS_CLIENTKEYS_INVALID') }
-    if (!privateKey) { throw new Error('HYBRIDCRYPT_ARGS_PVTKEY_INVALID') }
-    if (!passphrase) { throw new Error('HYBRIDCRYPT_ARGS_PASSPHRASE_INVALID') }
+    if (!body || !body.encBody) { throw new Error('HYBRIDCRYPT_ARGS_BODY_INVALID'); }
+    if (!keys || !keys.swishIV || !keys.swishKey || !keys.swishNextPublic) { throw new Error('HYBRIDCRYPT_ARGS_CLIENTKEYS_INVALID'); }
+    if (!privateKey) { throw new Error('HYBRIDCRYPT_ARGS_PVTKEY_INVALID'); }
+    if (!passphrase) { throw new Error('HYBRIDCRYPT_ARGS_PASSPHRASE_INVALID'); }
     let key: Buffer;
     try {
       key = Buffer.from(keys.swishKey, 'base64');
@@ -232,6 +232,6 @@ export class HybridCryptography {
       throw new Error('HYBRIDCRYPT_HDEC_NEXTPUB_FAILED');
     }
 
-    return  { data, nextPublic };
+    return { data, nextPublic };
   }
 }

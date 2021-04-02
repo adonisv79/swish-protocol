@@ -12,12 +12,12 @@ export interface SwishDecryption {
   createdDate: number;
 }
 
-export interface DecryptedRequest { 
+export interface DecryptedRequest {
   body: Buffer;
   nextPubKey: string;
 }
 
-export interface EncryptedResponse { 
+export interface EncryptedResponse {
   headers: SwishHeaders;
   body: SwishBody;
   decrypt: SwishDecryption;
@@ -29,8 +29,8 @@ export class SwishServer extends HybridCryptography {
    * @param headers - The request headers
    */
   public handleHandshakeRequest(headers: SwishHeaders): EncryptedResponse {
-    let iv: Buffer
-    let key: Buffer
+    let iv: Buffer;
+    let key: Buffer;
 
     if (headers.swishSessionId === '') {
       throw new Error('SESSION_ID_INVALID');
@@ -40,14 +40,14 @@ export class SwishServer extends HybridCryptography {
 
     try {
       if (headers.swishKey.length < 5) throw new Error();
-      key = Buffer.from(headers.swishKey, 'base64')
+      key = Buffer.from(headers.swishKey, 'base64');
     } catch (err) {
       throw new Error('HANDSHAKE_KEY_INVALID');
     }
 
     try {
       if (headers.swishIV.length < 10) throw new Error();
-      iv = Buffer.from(headers.swishIV, 'base64')
+      iv = Buffer.from(headers.swishIV, 'base64');
     } catch (err) {
       throw new Error('HANDSHAKE_AES_IV_INVALID');
     }

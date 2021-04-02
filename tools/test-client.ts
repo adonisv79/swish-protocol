@@ -1,18 +1,18 @@
 import { BinaryLike } from 'crypto';
-import axios, { AxiosResponse } from 'axios'
+import axios, { AxiosResponse } from 'axios';
 import { SwishClient, SwishHeaders } from '../src/index';
 
 const SERVER_URL = 'http://localhost:3000';
 const clientHS = new SwishClient();
 
-async function testHandShake() {
+async function testHandShake(): Promise<any> {
   console.log('################################################################################');
   const swish = clientHS.generateHandshake();
   console.log('***HANDSHAKE:INITIATING***');
   // run the request. we don't use async await coz request-promise uses bluebird
   return axios({
     method: 'post',
-    url:  `${SERVER_URL}/auth/handshake`,
+    url: `${SERVER_URL}/auth/handshake`,
     responseType: 'json',
     headers: {
       'swish-action': swish.headers.swishAction,
@@ -21,7 +21,7 @@ async function testHandShake() {
       'swish-next': swish.headers.swishNextPublic,
       'swish-sess-id': swish.headers.swishSessionId,
     },
-    data: swish.body
+    data: swish.body,
   }).then((response: AxiosResponse) => {
     console.log('***HANDSHAKE:RECEIVED***');
     const swishheaders: SwishHeaders = {
@@ -41,7 +41,7 @@ async function testHandShake() {
   });
 }
 
-async function testRequest(body: BinaryLike | object) {
+async function testRequest(body: BinaryLike | object): Promise<void> {
   console.log('***SENDING***');
   console.dir(body);
   const swish = clientHS.encryptRequest(body);
@@ -57,7 +57,7 @@ async function testRequest(body: BinaryLike | object) {
       'swish-next': swish.headers.swishNextPublic,
       'swish-sess-id': swish.headers.swishSessionId,
     },
-    data: swish.body
+    data: swish.body,
   }).then((response: AxiosResponse) => {
     const swishheaders: SwishHeaders = {
       swishAction: (response.headers['swish-action'] || '').toString(),

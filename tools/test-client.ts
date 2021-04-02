@@ -1,6 +1,5 @@
 import { BinaryLike } from 'crypto';
-import rp from 'request-promise';
-import { Response } from 'request';
+import axios, { AxiosResponse } from 'axios'
 import { SwishClient, SwishHeaders } from '../src/index';
 
 const SERVER_URL = 'http://localhost:3000';
@@ -11,8 +10,10 @@ async function testHandShake() {
   const swish = clientHS.generateHandshake();
   console.log('***HANDSHAKE:INITIATING***');
   // run the request. we don't use async await coz request-promise uses bluebird
-  return rp({
-    body: swish.body,
+  return axios({
+    method: 'post',
+    url:  `${SERVER_URL}/auth/handshake`,
+    responseType: 'json',
     headers: {
       'swish-action': swish.headers.swishAction,
       'swish-iv': swish.headers.swishIV,
@@ -20,11 +21,8 @@ async function testHandShake() {
       'swish-next': swish.headers.swishNextPublic,
       'swish-sess-id': swish.headers.swishSessionId,
     },
-    json: true,
-    method: 'POST',
-    resolveWithFullResponse: true,
-    uri: `${SERVER_URL}/auth/handshake`,
-  }).then((response: Response) => {
+    data: swish.body
+  }).then((response: AxiosResponse) => {
     console.log('***HANDSHAKE:RECEIVED***');
     const swishheaders: SwishHeaders = {
       swishAction: (response.headers['swish-action'] || '').toString(),
@@ -34,7 +32,7 @@ async function testHandShake() {
       swishSessionId: (response.headers['swish-sess-id'] || '').toString(),
     };
     const dec: any = clientHS.handleHandshakeResponse({
-      headers: swishheaders, body: response.body,
+      headers: swishheaders, body: response.data,
     });
     console.dir(dec);
     return dec;
@@ -48,8 +46,10 @@ async function testRequest(body: BinaryLike | object) {
   console.dir(body);
   const swish = clientHS.encryptRequest(body);
   // run the request. we don't use async await coz request-promise uses bluebird
-  return rp({
-    body: swish.body,
+  return axios({
+    url: `${SERVER_URL}/test/success`,
+    method: 'post',
+    responseType: 'json',
     headers: {
       'swish-action': swish.headers.swishAction,
       'swish-iv': swish.headers.swishIV,
@@ -57,11 +57,8 @@ async function testRequest(body: BinaryLike | object) {
       'swish-next': swish.headers.swishNextPublic,
       'swish-sess-id': swish.headers.swishSessionId,
     },
-    json: true,
-    method: 'POST',
-    resolveWithFullResponse: true,
-    uri: `${SERVER_URL}/test/success`,
-  }).then((response: Response) => {
+    data: swish.body
+  }).then((response: AxiosResponse) => {
     const swishheaders: SwishHeaders = {
       swishAction: (response.headers['swish-action'] || '').toString(),
       swishIV: (response.headers['swish-iv'] || '').toString(),
@@ -73,7 +70,7 @@ async function testRequest(body: BinaryLike | object) {
     console.log(response.headers);
     console.log('********************************************************************');
     const dec: any = clientHS.decryptResponse({
-      headers: swishheaders, body: response.body,
+      headers: swishheaders, body: response.data,
     });
     console.log('***RECEIVED_RESPONSE***');
     console.dir(dec);

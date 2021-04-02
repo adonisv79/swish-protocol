@@ -13,9 +13,8 @@
     "dist:server": "node dist/tools/test-server",
     "snyk": "snyk test",
     "test": "jest",
-    "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:coveralls": "jest --coverage | coveralls"
+    "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls"
   },
   "repository": {
     "type": "git",

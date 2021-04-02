@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import express from 'express';
 import bodyParser from 'body-parser';
 import { IncomingHttpHeaders } from 'http';
@@ -80,15 +81,16 @@ app.post('/test/success', (req, res) => {
     // get the decrypted request
     const headers = getSwishFromReqHeaders(req.headers);
     console.dir(session.find(req.headers['swish-sess-id']).decrypt);
-    const decReq = serverHS.decryptRequest(headers, req.body, privateKey, passphrase) as any;
+    const decReq = serverHS.decryptRequest(headers, req.body, privateKey, passphrase);
 
     console.log('***RECEIVED_REQUEST***');
     console.dir(decReq);
+    const bodyObj = decReq.body as Record<string, unknown>;
     let resBody;
-    if (decReq.body.action === 'hello' && decReq.body.passcode === 'whoami') {
-      resBody = { secretResponse: `Hello ${decReq.body.message}` };
-    } else if (decReq.body.action === 'move' && decReq.body.passcode === 'whereami') {
-      resBody = { secretResponse: `Welcome to ${decReq.body.message}` };
+    if (bodyObj.action === 'hello' && bodyObj.passcode === 'whoami') {
+      resBody = { secretResponse: `Hello ${bodyObj.message}` };
+    } else if (bodyObj.action === 'move' && bodyObj.passcode === 'whereami') {
+      resBody = { secretResponse: `Welcome to ${bodyObj.message}` };
     } else {
       resBody = { secretResponse: 'Unknown action, should be hello or move' };
     }

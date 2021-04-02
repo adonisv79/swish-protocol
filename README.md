@@ -5,9 +5,11 @@ An API Authentication Mechanism in order to monitor and manage sessions between 
 ## Project stats
 * Package: [![npm](https://img.shields.io/npm/v/swish-protocol.svg)](https://www.npmjs.com/package/swish-protocol) [![npm](https://img.shields.io/npm/dm/swish-protocol.svg)](https://www.npmjs.com/package/swish-protocol)
 * License: [![GitHub](https://img.shields.io/github/license/adonisv79/swish-protocol.svg)](https://github.com/adonisv79/swish-protocol/blob/master/LICENSE)
-* CICD: [![Codacy Badge](https://api.codacy.com/project/badge/Grade/24953a75015c47dc82aeb18ccc9b97d6)](https://www.codacy.com/app/adonisv79/swish-protocol?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=adonisv79/swish-protocol&amp;utm_campaign=Badge_Grade) [![Known Vulnerabilities](https://snyk.io/test/github/adonisv79/swish-protocol/badge.svg)](https://snyk.io/test/github/adonisv79/swish-protocol)
+* CICD: [![Codacy Badge](https://app.codacy.com/project/badge/Grade/384bdaeb318b42039b9f1d3b723e1e3d)](https://www.codacy.com/gh/adonisv79/swish-protocol/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=adonisv79/swish-protocol&amp;utm_campaign=Badge_Grade) [![Known Vulnerabilities](https://snyk.io/test/github/adonisv79/swish-protocol/badge.svg)](https://snyk.io/test/github/adonisv79/swish-protocol)
   * develop: [![Build Status](https://travis-ci.com/adonisv79/swish-protocol.svg?branch=develop)](https://travis-ci.com/adonisv79/swish-protocol) [![Coverage Status](https://coveralls.io/repos/github/adonisv79/swish-protocol/badge.svg?branch=master)](https://coveralls.io/github/adonisv79/swish-protocol?branch=develop)
   * master: [![Build Status](https://travis-ci.com/adonisv79/swish-protocol.svg?branch=master)](https://travis-ci.com/adonisv79/swish-protocol) [![Coverage Status](https://coveralls.io/repos/github/adonisv79/swish-protocol/badge.svg?branch=master)](https://coveralls.io/github/adonisv79/swish-protocol?branch=master)
+
+  
 
 ## How it works
 The API Handshake is basically a Hybrid Encryption system (https://en.wikipedia.org/wiki/Hybrid_cryptosystem) which is built for managing short to medium term Client-Server sessions. This is useful for ensuring that whenever a client needs to connect to an API, the transmitted communication on the network is encrypted e2e (End-to-End). On top of that, when that session is destroyed, the transmitted data are as good as gone! To continue communicating, the client needs to perform a new handshake. As of v1.1.0, we have added a double ratchet mechanism to even complicate things. v1.2.0 improvements focusing on strict typing inference where we have adapted the base code to TypeScript :p
@@ -31,6 +33,9 @@ npm run dist:client
 ```
 
 ## History
+### Fixed hybrid decryption response (2.3.0)
+Major improvements in code fixing several pending code quality fixes and type definition improvements
+
 ### Fixed hybrid decryption response (2.0.1)
 * it now uses HybridDecryptResult which returns the decrypted data as buffer and the next public key in the chain.
 * SwishBody's 'enc_body' no longer allows undefined

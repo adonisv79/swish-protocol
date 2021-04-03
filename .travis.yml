@@ -2,6 +2,8 @@ sudo: false
 language: node_js
 node_js:
   14.15.3
+env:
+  - SNYK_TOKEN=a0dab200-ad06-47c5-b82e-05f69bd1fee0
 script: 
   - npm run audit
   - npm run snyk

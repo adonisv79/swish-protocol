@@ -1,6 +1,6 @@
 {
   "name": "swish-protocol",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "An API Authentication mechanism using Hybrid Cryptography in order to monitor and manage sessions with an API",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -15,7 +15,8 @@
     "snyk": "snyk test",
     "test": "jest",
     "test:coverage": "jest --coverage",
-    "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls"
+    "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls",
+    "build": "tsc"
   },
   "repository": {
     "type": "git",

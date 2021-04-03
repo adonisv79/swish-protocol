@@ -28,6 +28,6 @@
     "preserveConstEnums": false,
     "forceConsistentCasingInFileNames": true,
   },
-  "include":[ "src/**/*", "tools/**/*" ],
+  "include": [ "src/**/*", "tools/**/*" ],
   "exclude": [ "node_modules", "coverage", "**/*.spec.ts", "**/*.test.ts" ]
 }

@@ -33,6 +33,9 @@ npm run dist:client
 ```
 
 ## History
+### Fixed CICD and Typescript+AirBnb linting policies (2.4.0)
+automated publish and fixed several CICD integrations. Server and Client classes functionalities are now made static
+
 ### Fixed hybrid decryption response (2.3.0)
 Major improvements in code fixing several pending code quality fixes and type definition improvements
 

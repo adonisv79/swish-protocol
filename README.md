@@ -12,7 +12,7 @@ An API Authentication Mechanism in order to monitor and manage sessions between 
   
 
 ## How it works
-The API Handshake is basically a Hybrid Encryption system (https://en.wikipedia.org/wiki/Hybrid_cryptosystem) which is built for managing short to medium term Client-Server sessions. This is useful for ensuring that whenever a client needs to connect to an API, the transmitted communication on the network is encrypted e2e (End-to-End). On top of that, when that session is destroyed, the transmitted data are as good as gone! To continue communicating, the client needs to perform a new handshake. As of v1.1.0, we have added a double ratchet mechanism to even complicate things. v1.2.0 improvements focusing on strict typing inference where we have adapted the base code to TypeScript :p
+The API Handshake is basically a Hybrid Encryption system (https://en.wikipedia.org/wiki/Hybrid_cryptosystem) which is built for managing short to medium term Client-Server sessions. This is useful for ensuring that whenever a client needs to connect to an API, the transmitted communication on the network is encrypted e2e (End-to-End). On top of that, when that session is destroyed, the transmitted data are as good as gone! To continue communicating, the client needs to perform a new handshake. To ensure that keys cannot be reused, it also implements the double ratchet algorithm (https://en.wikipedia.org/wiki/Double_Ratchet_Algorithm).
 
 For more details on this project, please see the project wiki at https://github.com/adonisv79/node-swish-protocol/wiki
 

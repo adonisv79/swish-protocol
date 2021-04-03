@@ -1,7 +1,7 @@
-import crypto, { BinaryLike, generateKeyPairSync } from 'crypto';
+import crypto, { BinaryLike, generateKeyPairSync } from 'crypto'
 
-const AES_ALGO = 'aes-128-cbc';
-const RSA_MODULUS_LENGTH = 512; // this can be made 1024 but it will be slow and bandwidth heavy
+const AES_ALGO = 'aes-128-cbc'
+const RSA_MODULUS_LENGTH = 512 // this can be made 1024 but it will be slow and bandwidth heavy
 
 /** An object containing necessary values used for AES cryptography */
 export interface AESKeySet {
@@ -75,10 +75,10 @@ export class HybridCryptography {
   /**
   * Creates an randomized AESKeySet
   */
-  createAESEncryptionKey(): AESKeySet {
-    const size = 16; // assume 'aes-128-cbc' which is 16byte (16 * 8 = 128bit)
+  static createAESEncryptionKey(): AESKeySet {
+    const size = 16 // assume 'aes-128-cbc' which is 16byte (16 * 8 = 128bit)
     // generate the new random key and IV which should be of same size
-    return { key: crypto.randomBytes(size), iv: crypto.randomBytes(size) };
+    return { key: crypto.randomBytes(size), iv: crypto.randomBytes(size) }
   }
 
   /**
@@ -86,17 +86,17 @@ export class HybridCryptography {
    * @param data The data to encrypt
    * @param aes The AES Key Set which contains the key and initialization vector values
    */
-  aesEncrypt(
+  static aesEncrypt(
     data: BinaryLike,
     aes: AESKeySet,
   ): string {
     try {
-      const cipher = crypto.createCipheriv(AES_ALGO, aes.key, aes.iv);
-      const encData = cipher.update(data);
+      const cipher = crypto.createCipheriv(AES_ALGO, aes.key, aes.iv)
+      const encData = cipher.update(data)
       return Buffer.concat([encData, cipher.final()])
-        .toString('base64');
+        .toString('base64')
     } catch {
-      throw new Error('HYBRIDCRYPTO_AES_ENCRYPTION_FAILED');
+      throw new Error('HYBRIDCRYPTO_AES_ENCRYPTION_FAILED')
     }
   }
 
@@ -108,20 +108,20 @@ export class HybridCryptography {
   *   if true then it will be returned as JSON
   * @param aes The AES Key Set which contains the key and initialization vector values
   */
-  aesDecrypt(
+  static aesDecrypt(
     encData: string,
     isJson = false,
     aes: AESKeySet,
   ): Buffer {
     try {
-      const encDataBuff = Buffer.from(encData, 'base64');
-      const decipher = crypto.createDecipheriv(AES_ALGO, aes.key, aes.iv);
-      const decDataBuff = decipher.update(encDataBuff);
-      let decData: Buffer = Buffer.concat([decDataBuff, decipher.final()]);
-      if (isJson) { decData = JSON.parse(decData.toString()) as Buffer; }
-      return decData;
+      const encDataBuff = Buffer.from(encData, 'base64')
+      const decipher = crypto.createDecipheriv(AES_ALGO, aes.key, aes.iv)
+      const decDataBuff = decipher.update(encDataBuff)
+      let decData: Buffer = Buffer.concat([decDataBuff, decipher.final()])
+      if (isJson) { decData = JSON.parse(decData.toString()) as Buffer }
+      return decData
     } catch {
-      throw new Error('HYBRIDCRYPTO_AES_DECRYPTION_FAILED');
+      throw new Error('HYBRIDCRYPTO_AES_DECRYPTION_FAILED')
     }
   }
 
@@ -129,7 +129,7 @@ export class HybridCryptography {
    * Creates a new RSA key pair
    * @param passphrase - The special passphrase to use the decryption/private key
    */
-  createRSAEncrytptionKeys(passphrase: string): RSAKeySet {
+  static createRSAEncrytptionKeys(passphrase: string): RSAKeySet {
     const keys = generateKeyPairSync('rsa', {
       modulusLength: RSA_MODULUS_LENGTH,
       privateKeyEncoding: {
@@ -139,12 +139,12 @@ export class HybridCryptography {
         type: 'pkcs8',
       },
       publicKeyEncoding: { format: 'pem', type: 'spki' },
-    });
+    })
 
     return {
       pvtKey: keys.privateKey,
       pubKey: keys.publicKey,
-    };
+    }
   }
 
   /**
@@ -152,37 +152,37 @@ export class HybridCryptography {
    * @param data - The data to encrypt. If this is an object, returned 'isJson' will be set to true
    * @param rsaPub - The RSA public key to be used to encrypt the data
    */
-  hybridEncrypt(
+  static hybridEncrypt(
     data: BinaryLike | Record<string, unknown>,
     rsaPub: string,
   ): HybridEncryptResult {
-    const date = new Date();
-    const body: SwishBody = { encBody: '', isJson: false };
-    let dataString = '';
+    const date = new Date()
+    const body: SwishBody = { encBody: '', isJson: false }
+    let dataString = ''
     if (typeof data === 'object') { // cast JSON objects to stringified json
-      body.isJson = true;
-      dataString = JSON.stringify(data);
+      body.isJson = true
+      dataString = JSON.stringify(data)
     }
 
     // lets create the next RSA public key to use (Double Ratchet)
-    const rsaKeys = this.createRSAEncrytptionKeys(date.getTime().toString());
+    const rsaKeys = HybridCryptography.createRSAEncrytptionKeys(date.getTime().toString())
     // create a new symetric key set
-    const aes = this.createAESEncryptionKey();
+    const aes = HybridCryptography.createAESEncryptionKey()
     // encrypt the data and next public key with the AES symetric key
-    body.encBody = this.aesEncrypt(dataString, aes);
+    body.encBody = HybridCryptography.aesEncrypt(dataString, aes)
     // now encrypt the aes key+iv with the public key and make each base64
     const keys: SwishKeys = {
       swishKey: crypto.publicEncrypt({ key: rsaPub, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, aes.key).toString('base64'),
       swishIV: crypto.publicEncrypt({ key: rsaPub, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, aes.iv).toString('base64'),
-      swishNextPublic: this.aesEncrypt(rsaKeys.pubKey, aes),
-    };
+      swishNextPublic: HybridCryptography.aesEncrypt(rsaKeys.pubKey, aes),
+    }
 
     return {
       createdDate: date.getTime(),
       body,
       keys,
       nextPrivate: rsaKeys.pvtKey,
-    };
+    }
   }
 
   /**
@@ -192,46 +192,48 @@ export class HybridCryptography {
    * @param privateKey - the next private key for decryption in the chain
    * @param passphrase - the Passphrase used to generate the RSA private key
    */
-  hybridDecrypt(
+  static hybridDecrypt(
     body: SwishBody,
     keys: SwishKeys,
     privateKey: string,
     passphrase: string,
   ): HybridDecryptResult {
     // decrypt the base64 AES key and IV
-    if (!body || !body.encBody) { throw new Error('HYBRIDCRYPT_ARGS_BODY_INVALID'); }
-    if (!keys || !keys.swishIV || !keys.swishKey || !keys.swishNextPublic) { throw new Error('HYBRIDCRYPT_ARGS_CLIENTKEYS_INVALID'); }
-    if (!privateKey) { throw new Error('HYBRIDCRYPT_ARGS_PVTKEY_INVALID'); }
-    if (!passphrase) { throw new Error('HYBRIDCRYPT_ARGS_PASSPHRASE_INVALID'); }
-    let key: Buffer;
+    if (!body || !body.encBody) { throw new Error('HYBRIDCRYPT_ARGS_BODY_INVALID') }
+    if (!keys || !keys.swishIV || !keys.swishKey || !keys.swishNextPublic) { throw new Error('HYBRIDCRYPT_ARGS_CLIENTKEYS_INVALID') }
+    if (!privateKey) { throw new Error('HYBRIDCRYPT_ARGS_PVTKEY_INVALID') }
+    if (!passphrase) { throw new Error('HYBRIDCRYPT_ARGS_PASSPHRASE_INVALID') }
+
+    let key: Buffer
     try {
-      key = Buffer.from(keys.swishKey, 'base64');
-      key = crypto.privateDecrypt({ key: privateKey, passphrase, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, key);
+      key = Buffer.from(keys.swishKey, 'base64')
+      key = crypto.privateDecrypt({ key: privateKey, passphrase, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, key)
     } catch (err) {
-      throw new Error('HYBRIDCRYPT_HDEC_AESKEY_FAILED');
-    }
-    let iv: Buffer;
-    try {
-      iv = Buffer.from(keys.swishIV, 'base64');
-      iv = crypto.privateDecrypt({ key: privateKey, passphrase, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, iv);
-    } catch (err) {
-      throw new Error('HYBRIDCRYPT_HDEC_AESIV_FAILED');
+      throw new Error('HYBRIDCRYPT_HDEC_AESKEY_FAILED')
     }
 
-    let data: Buffer;
+    let iv: Buffer
     try {
-      data = this.aesDecrypt((body.encBody), body.isJson, { key, iv });
+      iv = Buffer.from(keys.swishIV, 'base64')
+      iv = crypto.privateDecrypt({ key: privateKey, passphrase, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, iv)
     } catch (err) {
-      throw new Error('HYBRIDCRYPT_HDEC_BODY_FAILED');
+      throw new Error('HYBRIDCRYPT_HDEC_AESIV_FAILED')
     }
 
-    let nextPublic: string;
+    let data: Buffer
     try {
-      nextPublic = this.aesDecrypt(keys.swishNextPublic, false, { key, iv }).toString();
+      data = HybridCryptography.aesDecrypt((body.encBody), body.isJson, { key, iv })
     } catch (err) {
-      throw new Error('HYBRIDCRYPT_HDEC_NEXTPUB_FAILED');
+      throw new Error('HYBRIDCRYPT_HDEC_BODY_FAILED')
     }
 
-    return { data, nextPublic };
+    let nextPublic: string
+    try {
+      nextPublic = HybridCryptography.aesDecrypt(keys.swishNextPublic, false, { key, iv }).toString()
+    } catch (err) {
+      throw new Error('HYBRIDCRYPT_HDEC_NEXTPUB_FAILED')
+    }
+
+    return { data, nextPublic }
   }
 }

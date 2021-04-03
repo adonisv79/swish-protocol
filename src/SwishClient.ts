@@ -1,43 +1,42 @@
-import { BinaryLike } from 'crypto';
-import { HybridCryptography, SwishPackage, SwishHeaders } from './HybridCryptography';
+import { BinaryLike } from 'crypto'
+import { HybridCryptography, SwishPackage, SwishHeaders } from './HybridCryptography'
 
-export class SwishClient extends HybridCryptography {
-  private strSessionId!: string;
+export class SwishClient {
+  private strSessionId!: string
 
   private objKeys: {
     nextPublic: string;
     nextPrivate: string;
     createdDate: number;
-  };
+  }
 
   /**
    * Gets the current client session id
    */
   public get SessionId(): string {
-    return this.strSessionId;
+    return this.strSessionId
   }
 
   constructor() {
-    super();
     // set the default
-    this.objKeys = { nextPublic: '', nextPrivate: '', createdDate: -1 };
-    this.strSessionId = '';
+    this.objKeys = { nextPublic: '', nextPrivate: '', createdDate: -1 }
+    this.strSessionId = ''
   }
 
   /**
    * Validates the headers with added keys expected from a server response
    */
-  private validateResponseSwishHeader(headers: SwishHeaders): void {
+  private static validateResponseSwishHeader(headers: SwishHeaders): void {
     if (!headers.swishSessionId) {
-      throw new Error('HANDSHAKE_RESPONSE_SESSID_INVALID');
+      throw new Error('HANDSHAKE_RESPONSE_SESSID_INVALID')
     } else if (!headers.swishAction) {
-      throw new Error('HANDSHAKE_RESPONSE_ACTION_INVALID');
+      throw new Error('HANDSHAKE_RESPONSE_ACTION_INVALID')
     } else if (!headers.swishKey) {
-      throw new Error('HANDSHAKE_RESPONSE_AESKEY_INVALID');
+      throw new Error('HANDSHAKE_RESPONSE_AESKEY_INVALID')
     } else if (!headers.swishIV) {
-      throw new Error('HANDSHAKE_RESPONSE_AESIV_INVALID');
+      throw new Error('HANDSHAKE_RESPONSE_AESIV_INVALID')
     } else if (!headers.swishNextPublic) {
-      throw new Error('HANDSHAKE_RESPONSE_NEXTPUBKEY_INVALID');
+      throw new Error('HANDSHAKE_RESPONSE_NEXTPUBKEY_INVALID')
     }
   }
 
@@ -46,21 +45,21 @@ export class SwishClient extends HybridCryptography {
    */
   public generateHandshake(): SwishPackage {
     // create a new RSA key pair
-    const date = new Date();
-    const rsa = this.createRSAEncrytptionKeys(date.getTime().toString());
-    this.strSessionId = '';
+    const date = new Date()
+    const rsa = HybridCryptography.createRSAEncrytptionKeys(date.getTime().toString())
+    this.strSessionId = ''
     this.objKeys = {
       createdDate: date.getTime(),
       nextPrivate: rsa.pvtKey,
       nextPublic: rsa.pubKey,
-    };
+    }
 
     // create a new aes set to encrypt the 'response public key'
-    const aes = this.createAESEncryptionKey();
-    const encNextPub = this.aesEncrypt(
+    const aes = HybridCryptography.createAESEncryptionKey()
+    const encNextPub = HybridCryptography.aesEncrypt(
       this.objKeys.nextPublic,
       aes,
-    );
+    )
     return {
       body: {
         encBody: '',
@@ -73,7 +72,7 @@ export class SwishClient extends HybridCryptography {
         swishNextPublic: encNextPub,
         swishSessionId: '',
       },
-    };
+    }
   }
 
   /**
@@ -82,14 +81,14 @@ export class SwishClient extends HybridCryptography {
    */
   public encryptRequest(body: BinaryLike | Record<string, unknown>): SwishPackage {
     if (!body) {
-      throw new Error('HYBRIDCRYPTO_REQUEST_BODY_INVALID');
+      throw new Error('HYBRIDCRYPTO_REQUEST_BODY_INVALID')
     } else if (!this.objKeys.nextPublic) {
-      throw new Error('HYBRIDCRYPTO_CLIENT_NEXTPUB_NOT_SET');
+      throw new Error('HYBRIDCRYPTO_CLIENT_NEXTPUB_NOT_SET')
     }
 
-    const result = this.hybridEncrypt(body, this.objKeys.nextPublic);
-    this.objKeys.nextPrivate = result.nextPrivate;
-    this.objKeys.createdDate = result.createdDate;
+    const result = HybridCryptography.hybridEncrypt(body, this.objKeys.nextPublic)
+    this.objKeys.nextPrivate = result.nextPrivate
+    this.objKeys.createdDate = result.createdDate
 
     return {
       body: result.body,
@@ -100,7 +99,7 @@ export class SwishClient extends HybridCryptography {
         swishNextPublic: result.keys.swishNextPublic,
         swishSessionId: this.strSessionId,
       },
-    };
+    }
   }
 
   /**
@@ -110,10 +109,10 @@ export class SwishClient extends HybridCryptography {
   public handleHandshakeResponse(options: SwishPackage): Buffer | Record<string, unknown> {
     // if new session id, assign it
     if (options.headers.swishSessionId && this.strSessionId !== options.headers.swishSessionId) {
-      this.strSessionId = options.headers.swishSessionId;
+      this.strSessionId = options.headers.swishSessionId
     }
     // retrieve the next request sequenced pub key
-    return this.decryptResponse(options);
+    return this.decryptResponse(options)
   }
 
   /**
@@ -121,16 +120,16 @@ export class SwishClient extends HybridCryptography {
    * @param options - The swish object containing the swish headers and body
    */
   public decryptResponse(options: SwishPackage): Buffer | Record<string, unknown> {
-    this.validateResponseSwishHeader(options.headers);
-    const decrypted = this.hybridDecrypt(
+    SwishClient.validateResponseSwishHeader(options.headers)
+    const decrypted = HybridCryptography.hybridDecrypt(
       options.body,
       options.headers,
       this.objKeys.nextPrivate,
       this.objKeys.createdDate.toString(),
-    );
+    )
 
     // set the next request public key in memory and return the body
-    this.objKeys.nextPublic = decrypted.nextPublic;
-    return decrypted.data;
+    this.objKeys.nextPublic = decrypted.nextPublic
+    return decrypted.data
   }
 }

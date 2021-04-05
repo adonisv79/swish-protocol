@@ -1,23 +1,18 @@
 import { SwishClient } from './SwishClient'
-import { SwishServer } from './SwishServer'
+import { EncryptedResponse, SwishServer } from './SwishServer'
 
-import { HybridCryptography } from './HybridCryptography'
-
-const passphrase = 'hakunamatata'
 const client = new SwishClient()
-const { key, iv } = HybridCryptography.createAESEncryptionKey()
-const { pubKey } = HybridCryptography.createRSAEncrytptionKeys(passphrase)
+let handshakeRequest
+let serverResponse: EncryptedResponse
 
 describe('SwishClient.generateHandshake', () => {
   test('should be able to generate a new handshake', () => {
-    const handShake = client.generateHandshake()
+    handshakeRequest = client.generateHandshake()
     expect(client.SessionId).toEqual('') // this is empty during start of handshake
-    expect(handShake.body).toBeTruthy()
-    expect(handShake.headers).toBeTruthy()
-    expect(handShake.headers.swishAction).toEqual('handshake_init')
-    expect(handShake.headers.swishIV).toBeTruthy()
-    expect(handShake.headers.swishKey).toBeTruthy()
-    expect(handShake.headers.swishNextPublic).toBeTruthy()
+    expect(handshakeRequest.body).toBeTruthy()
+    expect(handshakeRequest.headers).toBeTruthy()
+    expect(handshakeRequest.headers.swishAction).toEqual('handshake_init')
+    expect(handshakeRequest.headers.swishToken).toBeTruthy()
   })
 })
 
@@ -45,9 +40,7 @@ describe('SwishClient.encryptRequest', () => {
     expect(response.body.isJson).toEqual(true)
     expect(response.headers).toBeTruthy()
     expect(response.headers.swishAction).toEqual('request_basic')
-    expect(response.headers.swishKey).toBeTruthy()
-    expect(response.headers.swishIV).toBeTruthy()
-    expect(response.headers.swishNextPublic).toBeTruthy()
+    expect(response.headers.swishToken).toBeTruthy()
   })
 })
 
@@ -59,9 +52,7 @@ describe('SwishClient.handleHandshakeResponse', () => {
         headers: {
           swishSessionId: '',
           swishAction: '',
-          swishKey: '',
-          swishIV: '',
-          swishNextPublic: '',
+          swishToken: '',
         },
       })
     }).toThrow('HANDSHAKE_RESPONSE_SESSID_INVALID')
@@ -74,57 +65,36 @@ describe('SwishClient.handleHandshakeResponse', () => {
         headers: {
           swishSessionId: 'adonisv79',
           swishAction: '',
-          swishKey: '',
-          swishIV: '',
-          swishNextPublic: '',
+          swishToken: '',
         },
       })
     }).toThrow('HANDSHAKE_RESPONSE_ACTION_INVALID')
   })
 
-  test('should throw [HANDSHAKE_RESPONSE_AESKEY_INVALID] if provided header for swishKey is invalid', () => {
+  test('should throw [HANDSHAKE_RESPONSE_TOKEN_INVALID] if provided header for swishToken is empty', () => {
     expect(() => {
       client.handleHandshakeResponse({
         body: { isJson: false, encBody: '' },
         headers: {
           swishSessionId: 'adonisv79',
           swishAction: 'handshake_response',
-          swishKey: '',
-          swishIV: '',
-          swishNextPublic: '',
+          swishToken: '',
         },
       })
-    }).toThrow('HANDSHAKE_RESPONSE_AESKEY_INVALID')
+    }).toThrow('HANDSHAKE_RESPONSE_TOKEN_INVALID')
   })
 
-  test('should throw [HANDSHAKE_RESPONSE_AESIV_INVALID] if provided header for swishIV is invalid', () => {
+  test('should throw [HANDSHAKE_RESPONSE_TOKEN_INVALID] if provided header for swishToken cannot be properly parsed', () => {
     expect(() => {
       client.handleHandshakeResponse({
         body: { isJson: false, encBody: '' },
         headers: {
           swishSessionId: 'adonisv79',
           swishAction: 'handshake_response',
-          swishKey: key.toString('base64'),
-          swishIV: '',
-          swishNextPublic: '',
+          swishToken: 'some_bad_token',
         },
       })
-    }).toThrow('HANDSHAKE_RESPONSE_AESIV_INVALID')
-  })
-
-  test('should throw [HANDSHAKE_RESPONSE_NEXTPUBKEY_INVALID] if provided header for swishNextPublic is invalid', () => {
-    expect(() => {
-      client.handleHandshakeResponse({
-        body: { isJson: false, encBody: '' },
-        headers: {
-          swishSessionId: 'adonisv79',
-          swishAction: 'handshake_response',
-          swishKey: key.toString('base64'),
-          swishIV: iv.toString('base64'),
-          swishNextPublic: '',
-        },
-      })
-    }).toThrow('HANDSHAKE_RESPONSE_NEXTPUBKEY_INVALID')
+    }).toThrow('HANDSHAKE_RESPONSE_TOKEN_INVALID')
   })
 
   test('should throw [HYBRIDCRYPT_ARGS_BODY_INVALID] if provided encBody is invalid', () => {
@@ -134,18 +104,16 @@ describe('SwishClient.handleHandshakeResponse', () => {
         headers: {
           swishSessionId: 'adonisv79',
           swishAction: 'handshake_response',
-          swishKey: key.toString('base64'),
-          swishIV: iv.toString('base64'),
-          swishNextPublic: pubKey,
+          swishToken: 'thisistheaesiv.thisistheaeskey.thisisthenextpublicrsakeytobeused',
         },
       })
     }).toThrow('HYBRIDCRYPT_ARGS_BODY_INVALID')
   })
 
   test('should be able to decrypt to original response data', () => {
-    const handshakeResponse = client.generateHandshake()
-    handshakeResponse.headers.swishSessionId = 'adonisv79' // simulate server new sess id response
-    const serverResponse = SwishServer.handleHandshakeRequest(handshakeResponse.headers)
+    handshakeRequest = client.generateHandshake()
+    handshakeRequest.headers.swishSessionId = 'adonisv79' // simulate server new sess id response
+    serverResponse = SwishServer.handleHandshakeRequest(handshakeRequest.headers)
     const response = client.handleHandshakeResponse({
       body: serverResponse.body,
       headers: serverResponse.headers,

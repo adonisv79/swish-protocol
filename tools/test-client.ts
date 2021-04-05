@@ -17,9 +17,7 @@ async function testHandShake(): Promise< Buffer| Record<string, unknown>> {
     responseType: 'json',
     headers: {
       'swish-action': swish.headers.swishAction,
-      'swish-iv': swish.headers.swishIV,
-      'swish-key': swish.headers.swishKey,
-      'swish-next': swish.headers.swishNextPublic,
+      'swish-token': swish.headers.swishToken,
       'swish-sess-id': swish.headers.swishSessionId,
     },
     data: swish.body,
@@ -27,9 +25,7 @@ async function testHandShake(): Promise< Buffer| Record<string, unknown>> {
     console.log('***HANDSHAKE:RECEIVED***')
     const swishheaders: SwishHeaders = {
       swishAction: (response.headers['swish-action'] || '').toString(),
-      swishIV: (response.headers['swish-iv'] || '').toString(),
-      swishKey: (response.headers['swish-key'] || '').toString(),
-      swishNextPublic: (response.headers['swish-next'] || '').toString(),
+      swishToken: (response.headers['swish-token'] || '').toString(),
       swishSessionId: (response.headers['swish-sess-id'] || '').toString(),
     }
     const dec: Buffer | Record<string, unknown> = clientHS.handleHandshakeResponse({
@@ -51,18 +47,14 @@ async function testRequest(body: BinaryLike | Record<string, unknown>): Promise<
     responseType: 'json',
     headers: {
       'swish-action': swish.headers.swishAction,
-      'swish-iv': swish.headers.swishIV,
-      'swish-key': swish.headers.swishKey,
-      'swish-next': swish.headers.swishNextPublic,
+      'swish-token': swish.headers.swishToken,
       'swish-sess-id': swish.headers.swishSessionId,
     },
     data: swish.body,
   }).then((response: AxiosResponse) => {
     const swishheaders: SwishHeaders = {
       swishAction: (response.headers['swish-action'] || '').toString(),
-      swishIV: (response.headers['swish-iv'] || '').toString(),
-      swishKey: (response.headers['swish-key'] || '').toString(),
-      swishNextPublic: (response.headers['swish-next'] || '').toString(),
+      swishToken: (response.headers['swish-token'] || '').toString(),
       swishSessionId: (response.headers['swish-sess-id'] || '').toString(),
     }
     console.log('********************************************************************')

@@ -29,34 +29,21 @@ export class SwishServer extends HybridCryptography {
    * @param headers - The request headers
    */
   public static handleHandshakeRequest(headers: SwishHeaders): EncryptedResponse {
-    let iv: Buffer
-    let key: Buffer
-
     if (headers.swishSessionId === '') {
       throw new Error('SESSION_ID_INVALID')
     } else if (headers.swishAction !== 'handshake_init') {
       throw new Error('HANDSHAKE_INVALID_INIT')
     }
 
-    try {
-      if (headers.swishKey.length < 5) throw new Error()
-      key = Buffer.from(headers.swishKey, 'base64')
-    } catch (err) {
-      throw new Error('HANDSHAKE_KEY_INVALID')
-    }
-
-    try {
-      if (headers.swishIV.length < 10) throw new Error()
-      iv = Buffer.from(headers.swishIV, 'base64')
-    } catch (err) {
-      throw new Error('HANDSHAKE_AES_IV_INVALID')
-    }
+    const swishKeys = HybridCryptography.retrieveKeysFromSwishToken(headers.swishToken)
+    const iv = Buffer.from(swishKeys.aesIV, 'base64')
+    const key = Buffer.from(swishKeys.aesKey, 'base64')
 
     let responsePubKey: string
     // first lets decrypt that public key for sending our responses to this client
     try {
       responsePubKey = HybridCryptography.aesDecrypt(
-        headers.swishNextPublic, false, { key, iv },
+        swishKeys.rsaNextPublic, false, { key, iv },
       ).toString()
     } catch (err) {
       throw new Error('HANDSHAKE_NEXTPUBKEY_DECRYPT_FAILED')
@@ -64,7 +51,6 @@ export class SwishServer extends HybridCryptography {
 
     // encrypt an ok response using the client's response public key
     const result = SwishServer.encryptResponse(headers.swishSessionId, { status: 'ok' }, responsePubKey)
-
     result.headers.swishAction = 'handshake_response' // override the action value
     return result
   }
@@ -82,9 +68,10 @@ export class SwishServer extends HybridCryptography {
     nextPrivate: string,
     passphrase: string,
   ): DecryptedRequest {
+    const swishKeys = HybridCryptography.retrieveKeysFromSwishToken(headers.swishToken)
     const decrypted = HybridCryptography.hybridDecrypt(
       body,
-      headers,
+      swishKeys,
       nextPrivate,
       passphrase,
     )
@@ -122,9 +109,7 @@ export class SwishServer extends HybridCryptography {
       },
       headers: {
         swishAction: 'encrypt_response',
-        swishIV: result.keys.swishIV,
-        swishKey: result.keys.swishKey,
-        swishNextPublic: result.keys.swishNextPublic,
+        swishToken: `${result.keys.aesIV}.${result.keys.aesKey}.${result.keys.rsaNextPublic}`,
         swishSessionId,
       },
     }

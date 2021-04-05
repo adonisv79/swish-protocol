@@ -31,12 +31,13 @@ export class SwishClient {
       throw new Error('HANDSHAKE_RESPONSE_SESSID_INVALID')
     } else if (!headers.swishAction) {
       throw new Error('HANDSHAKE_RESPONSE_ACTION_INVALID')
-    } else if (!headers.swishKey) {
-      throw new Error('HANDSHAKE_RESPONSE_AESKEY_INVALID')
-    } else if (!headers.swishIV) {
-      throw new Error('HANDSHAKE_RESPONSE_AESIV_INVALID')
-    } else if (!headers.swishNextPublic) {
-      throw new Error('HANDSHAKE_RESPONSE_NEXTPUBKEY_INVALID')
+    } else if (!headers.swishToken) {
+      throw new Error('HANDSHAKE_RESPONSE_TOKEN_INVALID')
+    }
+    try { // to test is the keys can be retrieved from the token
+      HybridCryptography.retrieveKeysFromSwishToken(headers.swishToken)
+    } catch {
+      throw new Error('HANDSHAKE_RESPONSE_TOKEN_INVALID')
     }
   }
 
@@ -60,6 +61,7 @@ export class SwishClient {
       this.objKeys.nextPublic,
       aes,
     )
+    const swishToken = HybridCryptography.createSwishToken(aes.iv.toString('base64'), aes.key.toString('base64'), encNextPub)
     return {
       body: {
         encBody: '',
@@ -67,9 +69,7 @@ export class SwishClient {
       },
       headers: {
         swishAction: 'handshake_init',
-        swishIV: aes.iv.toString('base64'),
-        swishKey: aes.key.toString('base64'),
-        swishNextPublic: encNextPub,
+        swishToken,
         swishSessionId: '',
       },
     }
@@ -90,13 +90,12 @@ export class SwishClient {
     this.objKeys.nextPrivate = result.nextPrivate
     this.objKeys.createdDate = result.createdDate
 
+    const swishToken = HybridCryptography.createSwishToken(result.keys.aesIV, result.keys.aesKey, result.keys.rsaNextPublic)
     return {
       body: result.body,
       headers: {
         swishAction: 'request_basic',
-        swishIV: result.keys.swishIV,
-        swishKey: result.keys.swishKey,
-        swishNextPublic: result.keys.swishNextPublic,
+        swishToken,
         swishSessionId: this.strSessionId,
       },
     }
@@ -121,9 +120,10 @@ export class SwishClient {
    */
   public decryptResponse(options: SwishPackage): Buffer | Record<string, unknown> {
     SwishClient.validateResponseSwishHeader(options.headers)
+    const swishKeys = HybridCryptography.retrieveKeysFromSwishToken(options.headers.swishToken)
     const decrypted = HybridCryptography.hybridDecrypt(
       options.body,
-      options.headers,
+      swishKeys,
       this.objKeys.nextPrivate,
       this.objKeys.createdDate.toString(),
     )

@@ -14,19 +14,13 @@ app.use(bodyParser.json())
 
 function getSwishFromReqHeaders(reqHeaders: IncomingHttpHeaders): SwishHeaders {
   const headers: SwishHeaders = {
-    swishAction: '', swishIV: '', swishKey: '', swishNextPublic: '', swishSessionId: '',
+    swishAction: '', swishToken: '', swishSessionId: '',
   }
   if (typeof reqHeaders['swish-action'] === 'string') {
     headers.swishAction = reqHeaders['swish-action']
   }
-  if (typeof reqHeaders['swish-iv'] === 'string') {
-    headers.swishIV = reqHeaders['swish-iv']
-  }
-  if (typeof reqHeaders['swish-key'] === 'string') {
-    headers.swishKey = reqHeaders['swish-key']
-  }
-  if (typeof reqHeaders['swish-next'] === 'string') {
-    headers.swishNextPublic = reqHeaders['swish-next']
+  if (typeof reqHeaders['swish-token'] === 'string') {
+    headers.swishToken = reqHeaders['swish-token']
   }
   if (typeof reqHeaders['swish-sess-id'] === 'string') {
     headers.swishSessionId = reqHeaders['swish-sess-id']
@@ -52,11 +46,10 @@ app.post('/auth/handshake', (req, res) => {
     console.dir(result.body)
     res.set({
       'swish-action': result.headers.swishAction,
-      'swish-iv': result.headers.swishIV,
-      'swish-key': result.headers.swishKey,
-      'swish-next': result.headers.swishNextPublic,
+      'swish-token': result.headers.swishToken,
       'swish-sess-id': result.headers.swishSessionId,
     })
+    console.dir(result)
     res.send(result.body)
   } catch (err) {
     console.error(err)
@@ -103,9 +96,7 @@ app.post('/test/success', (req, res) => {
     console.log('')
     res.set({
       'swish-action': response.headers.swishAction,
-      'swish-iv': response.headers.swishIV,
-      'swish-key': response.headers.swishKey,
-      'swish-next': response.headers.swishNextPublic,
+      'swish-token': response.headers.swishToken,
       'swish-sess-id': response.headers.swishSessionId,
     })
     return res.send(response.body)

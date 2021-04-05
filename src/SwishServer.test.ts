@@ -10,10 +10,8 @@ const nextPubkey = HybridCryptography.aesEncrypt(pubKey, { key, iv })
 describe('SwishServer.handleHandshakeRequest', () => {
   const headers: SwishHeaders = {
     swishAction: '',
-    swishIV: '',
-    swishKey: '',
-    swishNextPublic: '',
     swishSessionId: '',
+    swishToken: '',
   }
 
   test('should ensure there is a sessionId value to associate the session with', () => {
@@ -34,34 +32,36 @@ describe('SwishServer.handleHandshakeRequest', () => {
     }
   })
 
-  test('should ensure the swishKey is valid', () => {
+  test('should ensure the swishKey is of correct length', () => {
     try {
       headers.swishSessionId = 'adonisv79'
       headers.swishAction = 'handshake_init'
+      headers.swishToken = `BadAesIv.${key.toString('base64')}.${nextPubkey}`
       SwishServer.handleHandshakeRequest(headers)
     } catch (err) {
-      expect((err as Error).message).toMatch('HANDSHAKE_KEY_INVALID')
+      expect((err as Error).message).toMatch('HEADER_SWISH_TOKEN_INVALID')
     }
   })
 
-  test('should ensure the swishKey is valid', () => {
+  test('should ensure the swishKey is of correct length', () => {
     try {
       headers.swishSessionId = 'adonisv79'
       headers.swishAction = 'handshake_init'
+      headers.swishToken = `${iv.toString('base64')}.BadAesKey.${nextPubkey}`
       SwishServer.handleHandshakeRequest(headers)
     } catch (err) {
-      expect((err as Error).message).toMatch('HANDSHAKE_KEY_INVALID')
+      expect((err as Error).message).toMatch('HEADER_SWISH_TOKEN_INVALID')
     }
   })
 
-  test('should ensure the swishIV is valid', () => {
+  test('should ensure the swishNextPublic is of correct length', () => {
     try {
       headers.swishSessionId = 'adonisv79'
       headers.swishAction = 'handshake_init'
-      headers.swishKey = key.toString('base64')
+      headers.swishToken = `${iv.toString('base64')}.${key.toString('base64')}.fakepubkey`
       SwishServer.handleHandshakeRequest(headers)
     } catch (err) {
-      expect((err as Error).message).toMatch('HANDSHAKE_AES_IV_INVALID')
+      expect((err as Error).message).toMatch('HEADER_SWISH_TOKEN_INVALID')
     }
   })
 
@@ -69,8 +69,7 @@ describe('SwishServer.handleHandshakeRequest', () => {
     try {
       headers.swishSessionId = 'adonisv79'
       headers.swishAction = 'handshake_init'
-      headers.swishKey = key.toString('base64')
-      headers.swishIV = iv.toString('base64')
+      headers.swishToken = `${iv.toString('base64')}.${key.toString('base64')}.thisisabrokennextpublickey`
       SwishServer.handleHandshakeRequest(headers)
     } catch (err) {
       expect((err as Error).message).toMatch('HANDSHAKE_NEXTPUBKEY_DECRYPT_FAILED')
@@ -80,24 +79,16 @@ describe('SwishServer.handleHandshakeRequest', () => {
   test('should respond the new randomized key sets based submitted request', () => {
     headers.swishSessionId = 'adonisv79'
     headers.swishAction = 'handshake_init'
-    headers.swishKey = key.toString('base64')
-    headers.swishIV = iv.toString('base64')
-    headers.swishNextPublic = nextPubkey
+    headers.swishToken = `${iv.toString('base64')}.${key.toString('base64')}.${nextPubkey}`
     const result = SwishServer.handleHandshakeRequest(headers)
     expect(result.headers.swishSessionId).toBe(headers.swishSessionId)
     expect(result.headers.swishAction).toBe('handshake_response')
-    expect(result.headers.swishIV).toBeTruthy()
-    expect(result.headers.swishKey).toBeTruthy()
-    expect(result.headers.swishNextPublic).toBeTruthy()
+    expect(result.headers.swishToken).toBeTruthy()
     // try to decrypt the data and analyze its content
     expect(result.body.encBody).toBeTruthy()
+    const swishKeys = HybridCryptography.retrieveKeysFromSwishToken(result.headers.swishToken)
     const bodyDec = HybridCryptography.hybridDecrypt(
-      result.body,
-      {
-        swishIV: result.headers.swishIV,
-        swishKey: result.headers.swishKey,
-        swishNextPublic: result.headers.swishNextPublic,
-      }, pvtKey, passphrase,
+      result.body, swishKeys, pvtKey, passphrase,
     )
     expect(bodyDec.data).toStrictEqual({ status: 'ok' })
     expect(bodyDec.nextPublic).toBeTruthy()
@@ -108,9 +99,7 @@ describe('SwishServer.decryptRequest', () => {
   const headers: SwishHeaders = {
     swishSessionId: 'adonisv79',
     swishAction: 'handshake_init',
-    swishIV: '',
-    swishKey: '',
-    swishNextPublic: '',
+    swishToken: '',
   }
   let encBody: string
   let nextServerPrivate: string
@@ -121,44 +110,19 @@ describe('SwishServer.decryptRequest', () => {
     const handshakeResult = SwishServer.handleHandshakeRequest({
       swishSessionId: 'adonisv79',
       swishAction: 'handshake_init',
-      swishIV: iv.toString('base64'),
-      swishKey: key.toString('base64'),
-      swishNextPublic: nextPubkey,
+      swishToken: `${iv.toString('base64')}.${key.toString('base64')}.${nextPubkey}`,
     })
     nextServerPrivate = handshakeResult.decrypt.nextPrivate
     serverKeyCreatedDate = handshakeResult.decrypt.createdDate
 
+    const swishKeys = HybridCryptography.retrieveKeysFromSwishToken(handshakeResult.headers.swishToken)
     const hDecResult = HybridCryptography.hybridDecrypt(
-      handshakeResult.body,
-      {
-        swishKey: handshakeResult.headers.swishKey,
-        swishIV: handshakeResult.headers.swishIV,
-        swishNextPublic: handshakeResult.headers.swishNextPublic,
-      }, pvtKey, passphrase,
+      handshakeResult.body, swishKeys, pvtKey, passphrase,
     )
 
     const newRequest = HybridCryptography.hybridEncrypt({ foo: 'bar', score: 100 }, hDecResult.nextPublic)
-    headers.swishKey = newRequest.keys.swishKey
-    headers.swishIV = newRequest.keys.swishIV
-    headers.swishNextPublic = newRequest.keys.swishNextPublic
+    headers.swishToken = HybridCryptography.createSwishToken(newRequest.keys.aesIV, newRequest.keys.aesKey, newRequest.keys.rsaNextPublic)
     encBody = newRequest.body.encBody
-  })
-
-  test('should throw [HYBRIDCRYPT_ARGS_CLIENTKEYS_INVALID] if any of the client provided keys are invalid', () => {
-    expect(() => {
-      SwishServer.decryptRequest(
-        {
-          swishIV: '',
-          swishKey: '',
-          swishNextPublic: '',
-          swishAction: '',
-          swishSessionId: '',
-        },
-        { encBody, isJson: true },
-        nextServerPrivate,
-        serverKeyCreatedDate.toString(),
-      )
-    }).toThrow('HYBRIDCRYPT_ARGS_CLIENTKEYS_INVALID')
   })
 
   test('should throw [HYBRIDCRYPT_ARGS_BODY_INVALID] if server encrypted body is invalid', () => {
@@ -205,32 +169,14 @@ describe('SwishServer.decryptRequest', () => {
     }).toThrowError()
   })
 
-  test('should throw [HYBRIDCRYPT_HDEC_AESKEY_FAILED] when you pass a wrong key', () => {
+  test('should throw [HYBRIDCRYPT_HDEC_AESIV_FAILED] when you pass a wrong iv in the token', () => {
     expect(() => {
+      const tokenKeys = headers.swishToken.split('.')
       SwishServer.decryptRequest(
         {
           swishSessionId: headers.swishSessionId,
           swishAction: headers.swishAction,
-          swishKey: 'this should break',
-          swishIV: headers.swishIV,
-          swishNextPublic: headers.swishNextPublic,
-        },
-        { encBody, isJson: true },
-        nextServerPrivate,
-        serverKeyCreatedDate.toString(),
-      )
-    }).toThrow('HYBRIDCRYPT_HDEC_AESKEY_FAILED')
-  })
-
-  test('should throw [HYBRIDCRYPT_HDEC_AESIV_FAILED] when you pass a wrong iv', () => {
-    expect(() => {
-      SwishServer.decryptRequest(
-        {
-          swishSessionId: headers.swishSessionId,
-          swishAction: headers.swishAction,
-          swishKey: headers.swishKey,
-          swishIV: 'this should break',
-          swishNextPublic: headers.swishNextPublic,
+          swishToken: `aninvalidaesiv==.${tokenKeys[1]}.${tokenKeys[2]}`,
         },
         { encBody, isJson: true },
         nextServerPrivate,
@@ -239,15 +185,29 @@ describe('SwishServer.decryptRequest', () => {
     }).toThrow('HYBRIDCRYPT_HDEC_AESIV_FAILED')
   })
 
+  test('should throw [HYBRIDCRYPT_HDEC_AESKEY_FAILED] when you pass a wrong AES key in the token', () => {
+    expect(() => {
+      const tokenKeys = headers.swishToken.split('.')
+      SwishServer.decryptRequest(
+        {
+          swishSessionId: headers.swishSessionId,
+          swishAction: headers.swishAction,
+          swishToken: `${tokenKeys[0]}.aninvalidaeskey==.${tokenKeys[2]}`,
+        },
+        { encBody, isJson: true },
+        nextServerPrivate,
+        serverKeyCreatedDate.toString(),
+      )
+    }).toThrow('HYBRIDCRYPT_HDEC_AESKEY_FAILED')
+  })
+
   test('should throw [HYBRIDCRYPT_HDEC_BODY_FAILED] when you pass the wrong body (not decryptable by given keys)', () => {
     expect(() => {
       SwishServer.decryptRequest(
         {
           swishSessionId: headers.swishSessionId,
           swishAction: headers.swishAction,
-          swishKey: headers.swishKey,
-          swishIV: headers.swishIV,
-          swishNextPublic: headers.swishNextPublic,
+          swishToken: headers.swishToken,
         },
         { encBody: 'this should break', isJson: true },
         nextServerPrivate,
@@ -258,13 +218,12 @@ describe('SwishServer.decryptRequest', () => {
 
   test('should throw [HYBRIDCRYPT_HDEC_NEXTPUB_FAILED] when you pass a wrong next pub key', () => {
     expect(() => {
+      const tokenKeys = headers.swishToken.split('.')
       SwishServer.decryptRequest(
         {
           swishSessionId: headers.swishSessionId,
           swishAction: headers.swishAction,
-          swishKey: headers.swishKey,
-          swishIV: headers.swishIV,
-          swishNextPublic: 'this should break',
+          swishToken: `${tokenKeys[0]}.${tokenKeys[1]}.thisisaninvalidnextpublickey`,
         },
         { encBody, isJson: true },
         nextServerPrivate,
@@ -321,8 +280,6 @@ describe('SwishServer.encryptResponse', () => {
     expect(encData.headers).toBeTruthy()
     expect(encData.headers.swishSessionId).toEqual('adonisv79')
     expect(encData.headers.swishAction).toEqual('encrypt_response')
-    expect(encData.headers.swishIV).toBeTruthy()
-    expect(encData.headers.swishKey).toBeTruthy()
-    expect(encData.headers.swishNextPublic).toBeTruthy()
+    expect(encData.headers.swishToken).toBeTruthy()
   })
 })

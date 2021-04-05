@@ -22,19 +22,21 @@ export interface RSAKeySet {
 /** Defines the basic keys found on the SwishHeader */
 export interface SwishKeys {
   /** The AES Initialization Vector */
-  swishIV: string;
+  aesIV: string;
   /** The AES Key */
-  swishKey: string;
+  aesKey: string;
   /** The next public key to be used in the transaction chain */
-  swishNextPublic: string;
+  rsaNextPublic: string;
 }
 
-/** Defines a complete header object and all its required members */
-export interface SwishHeaders extends SwishKeys{
+/** Defines a complete header object */
+export interface SwishHeaders{
   /** The swish action to implement */
   swishAction: string;
   /** The unique user session identifier */
   swishSessionId: string;
+  /** The SWISH Keys which are dot concatenated base64 string versions of the AES IV, AES Key and next RSA Public Key respectively */
+  swishToken: string;
 }
 
 /** The encrypted message and its metadata */
@@ -73,12 +75,67 @@ export interface HybridDecryptResult {
 
 export class HybridCryptography {
   /**
+   * Creates a new RSA key pair
+   * @param passphrase - The special passphrase to use the decryption/private key
+   */
+  static createRSAEncrytptionKeys(passphrase: string): RSAKeySet {
+    const keys = generateKeyPairSync('rsa', {
+      modulusLength: RSA_MODULUS_LENGTH,
+      privateKeyEncoding: {
+        cipher: AES_ALGO,
+        format: 'pem',
+        passphrase: passphrase.toString(),
+        type: 'pkcs8',
+      },
+      publicKeyEncoding: { format: 'pem', type: 'spki' },
+    })
+
+    return {
+      pvtKey: keys.privateKey,
+      pubKey: keys.publicKey,
+    }
+  }
+
+  /**
   * Creates an randomized AESKeySet
   */
   static createAESEncryptionKey(): AESKeySet {
     const size = 16 // assume 'aes-128-cbc' which is 16byte (16 * 8 = 128bit)
     // generate the new random key and IV which should be of same size
     return { key: crypto.randomBytes(size), iv: crypto.randomBytes(size) }
+  }
+
+  /**
+   * Generates the SWISH Token string from the base64 string version of the SwishKeys
+   * @param aesIv the base64 string version of the AES IV
+   * @param aesKey the base64 string version of the AES Key
+   * @param rsaNextPublic the base64 string version of the next public key to use in the chain
+   * @returns the Token string
+   */
+  static createSwishToken(aesIv: string, aesKey: string, rsaNextPublic: string): string {
+    return `${aesIv}.${aesKey}.${rsaNextPublic}`
+  }
+
+  /**
+   * Generates the SwishKeys object based on the SWISH Token string
+   * @param token the SWISH Token to parse
+   * @returns a SwishKeys object based on the token
+   */
+  static retrieveKeysFromSwishToken(token: string): SwishKeys {
+    if (!token) throw new Error('HEADER_SWISH_TOKEN_INVALID')
+    const keys = token.split('.')
+    if (keys.length !== 3
+      || !keys[0] || keys[0].length < 10
+      || !keys[1] || keys[1].length < 10
+      || !keys[2] || keys[2].length < 20
+    ) { throw new Error('HEADER_SWISH_TOKEN_INVALID') }
+    const swishKeys: SwishKeys = {
+      aesIV: keys[0].toString(),
+      aesKey: keys[1].toString(),
+      rsaNextPublic: keys[2].toString(),
+    }
+    // todo: need more checks like if the keys are valid base64 and are valid aes/rsa values
+    return swishKeys
   }
 
   /**
@@ -126,28 +183,6 @@ export class HybridCryptography {
   }
 
   /**
-   * Creates a new RSA key pair
-   * @param passphrase - The special passphrase to use the decryption/private key
-   */
-  static createRSAEncrytptionKeys(passphrase: string): RSAKeySet {
-    const keys = generateKeyPairSync('rsa', {
-      modulusLength: RSA_MODULUS_LENGTH,
-      privateKeyEncoding: {
-        cipher: AES_ALGO,
-        format: 'pem',
-        passphrase: passphrase.toString(),
-        type: 'pkcs8',
-      },
-      publicKeyEncoding: { format: 'pem', type: 'spki' },
-    })
-
-    return {
-      pvtKey: keys.privateKey,
-      pubKey: keys.publicKey,
-    }
-  }
-
-  /**
    * Encrypts the data with AES and then encrypts the AES keys with RSA
    * @param data - The data to encrypt. If this is an object, returned 'isJson' will be set to true
    * @param rsaPub - The RSA public key to be used to encrypt the data
@@ -172,9 +207,9 @@ export class HybridCryptography {
     body.encBody = HybridCryptography.aesEncrypt(dataString, aes)
     // now encrypt the aes key+iv with the public key and make each base64
     const keys: SwishKeys = {
-      swishKey: crypto.publicEncrypt({ key: rsaPub, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, aes.key).toString('base64'),
-      swishIV: crypto.publicEncrypt({ key: rsaPub, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, aes.iv).toString('base64'),
-      swishNextPublic: HybridCryptography.aesEncrypt(rsaKeys.pubKey, aes),
+      aesKey: crypto.publicEncrypt({ key: rsaPub, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, aes.key).toString('base64'),
+      aesIV: crypto.publicEncrypt({ key: rsaPub, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, aes.iv).toString('base64'),
+      rsaNextPublic: HybridCryptography.aesEncrypt(rsaKeys.pubKey, aes),
     }
 
     return {
@@ -200,13 +235,12 @@ export class HybridCryptography {
   ): HybridDecryptResult {
     // decrypt the base64 AES key and IV
     if (!body || !body.encBody) { throw new Error('HYBRIDCRYPT_ARGS_BODY_INVALID') }
-    if (!keys || !keys.swishIV || !keys.swishKey || !keys.swishNextPublic) { throw new Error('HYBRIDCRYPT_ARGS_CLIENTKEYS_INVALID') }
     if (!privateKey) { throw new Error('HYBRIDCRYPT_ARGS_PVTKEY_INVALID') }
     if (!passphrase) { throw new Error('HYBRIDCRYPT_ARGS_PASSPHRASE_INVALID') }
 
     let key: Buffer
     try {
-      key = Buffer.from(keys.swishKey, 'base64')
+      key = Buffer.from(keys.aesKey, 'base64')
       key = crypto.privateDecrypt({ key: privateKey, passphrase, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, key)
     } catch (err) {
       throw new Error('HYBRIDCRYPT_HDEC_AESKEY_FAILED')
@@ -214,7 +248,7 @@ export class HybridCryptography {
 
     let iv: Buffer
     try {
-      iv = Buffer.from(keys.swishIV, 'base64')
+      iv = Buffer.from(keys.aesIV, 'base64')
       iv = crypto.privateDecrypt({ key: privateKey, passphrase, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING }, iv)
     } catch (err) {
       throw new Error('HYBRIDCRYPT_HDEC_AESIV_FAILED')
@@ -229,7 +263,7 @@ export class HybridCryptography {
 
     let nextPublic: string
     try {
-      nextPublic = HybridCryptography.aesDecrypt(keys.swishNextPublic, false, { key, iv }).toString()
+      nextPublic = HybridCryptography.aesDecrypt(keys.rsaNextPublic, false, { key, iv }).toString()
     } catch (err) {
       throw new Error('HYBRIDCRYPT_HDEC_NEXTPUB_FAILED')
     }

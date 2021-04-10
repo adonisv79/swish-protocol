@@ -8,6 +8,7 @@ const { SessionManagerBasic } = require('adon-api-session')
 
 const session = new SessionManagerBasic()
 // lets setup our web server sample using express
+const swishPath = '/sapi'
 const port = 3000
 const app = express()
 app.use(bodyParser.json())
@@ -30,7 +31,7 @@ function getSwishFromReqHeaders(reqHeaders: IncomingHttpHeaders): SwishHeaders {
 }
 
 // create an endpoint listening to the recommended authentication path
-app.post('/auth/handshake', (req, res) => {
+app.post(swishPath, (req, res) => {
   try {
     console.log('################################################################################')
     console.log('***HANDSHAKE:REQUEST_ACCEPTED***')
@@ -58,7 +59,7 @@ app.post('/auth/handshake', (req, res) => {
 })
 
 // create a test endpoint to see if data are transferred securely
-app.post('/test/success', (req, res) => {
+app.post(`${swishPath}/test/success`, (req, res) => {
   try {
     console.log('################################################################################')
     console.log('***TEST:REQUEST_ACCEPTED***')

@@ -3,7 +3,7 @@ import { BinaryLike } from 'crypto'
 import axios, { AxiosResponse } from 'axios'
 import { SwishClient, SwishHeaders } from '../src/index'
 
-const SERVER_URL = 'http://localhost:3000'
+const SERVER_URL = 'http://localhost:3000/sapi'
 const clientHS = new SwishClient()
 
 async function testHandShake(): Promise< Buffer| Record<string, unknown>> {
@@ -13,7 +13,7 @@ async function testHandShake(): Promise< Buffer| Record<string, unknown>> {
   // run the request. we don't use async await coz request-promise uses bluebird
   return axios({
     method: 'post',
-    url: `${SERVER_URL}/auth/handshake`,
+    url: `${SERVER_URL}`,
     responseType: 'json',
     headers: {
       'swish-action': swish.headers.swishAction,

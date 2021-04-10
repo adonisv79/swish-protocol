@@ -10,6 +10,8 @@
   "scripts": {
     "dist:client": "node dist/tools/test-client",
     "dist:server": "node dist/tools/test-server",
+    "start:client": "ts-node tools/test-client",
+    "start:server": "ts-node tools/test-server",
     "audit": "npm audit",
     "lint": "eslint \"src/**/*.ts\" \"tools/**/*.ts\"",
     "snyk": "snyk test",
